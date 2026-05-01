@@ -8,92 +8,126 @@ from utils.payee_extractor import extract_payee
 
 log = logging.getLogger("hdfc_parser")
 
+DATE_RE = re.compile(r"^(\d{2}/\d{2}/\d{2})\s+(.*)")
+AMOUNT_RE = re.compile(r"(\d[\d,]*\.\d{2})")
+
 
 def parse(pdf) -> pd.DataFrame:
-    """Parse HDFC Bank statement PDF."""
+    """Parse HDFC Bank statement PDF using text extraction."""
     transactions = []
     skipped = 0
 
     log.info("HDFC Parser: Starting — %d page(s)", len(pdf.pages))
 
     for page_idx, page in enumerate(pdf.pages):
-        tables = page.extract_tables()
-        log.info("  Page %d: %d table(s) extracted", page_idx + 1, len(tables))
+        text = page.extract_text()
+        if not text:
+            log.info("  Page %d: no text extracted", page_idx + 1)
+            continue
 
-        for table_idx, table in enumerate(tables):
-            log.info("    Table %d: %d rows, %d cols", table_idx + 1, len(table), len(table[0]) if table else 0)
+        lines = text.split("\n")
+        log.info("  Page %d: %d text lines", page_idx + 1, len(lines))
 
-            for row_idx, row in enumerate(table):
-                if not row or len(row) < 7:
-                    log.debug("      Row %d: SKIPPED — empty or <7 cols (got %d)", row_idx, len(row) if row else 0)
-                    skipped += 1
-                    continue
+        # Extract opening balance from statement summary
+        opening_match = re.search(r"OpeningBalance\s+([\d,.]+)", text)
+        prev_balance = float(opening_match.group(1).replace(",", "")) if opening_match else 0.0
+        log.info("  Opening balance: %.2f", prev_balance)
 
-                date_str = str(row[0] or "").strip()
-                narration = str(row[1] or "").strip()
-                withdrawal = str(row[4] or "").strip()
-                deposit = str(row[5] or "").strip()
-                balance = str(row[6] or "").strip()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            match = DATE_RE.match(line)
 
-                # Skip headers / summary rows
-                skip_reason = None
-                if date_str.lower() in ("date", ""):
-                    skip_reason = "header row (date='date' or empty)"
-                elif "opening" in date_str.lower():
-                    skip_reason = "opening balance row"
-                elif "closing" in date_str.lower():
-                    skip_reason = "closing balance row"
-                elif "balance" in date_str.lower():
-                    skip_reason = "balance summary row"
-                elif not re.match(r"\d{2}/\d{2}/\d{2}", date_str):
-                    skip_reason = f"no valid date '{date_str}'"
+            if not match:
+                i += 1
+                continue
 
-                if skip_reason:
-                    log.debug("      Row %d: SKIPPED — %s | raw: %s", row_idx, skip_reason, row[:3])
-                    skipped += 1
-                    continue
+            date_str = match.group(1)
+            rest = match.group(2)
 
-                try:
-                    date = datetime.strptime(date_str, "%d/%m/%y").strftime("%Y-%m-%d")
-                except ValueError:
-                    log.debug("      Row %d: SKIPPED — date parse failed for '%s'", row_idx, date_str)
-                    skipped += 1
-                    continue
+            # Collect continuation line(s)
+            narration_parts = [rest]
+            while i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                if not next_line:
+                    break
+                if DATE_RE.match(next_line):
+                    break
+                if any(kw in next_line.upper() for kw in ["STATEMENT", "OPENING", "CLOSING", "GENERATED", "SUMMARY"]):
+                    break
+                narration_parts.append(next_line)
+                i += 1
 
-                # Debit or credit
-                if withdrawal and withdrawal not in ("", "None", "-"):
+            full_text = " ".join(narration_parts)
+
+            # Extract all amounts (X,XXX.XX pattern) from the first line only
+            amounts = AMOUNT_RE.findall(rest)
+
+            if len(amounts) < 2:
+                log.debug("    Line %d: SKIPPED — need >=2 amounts, got %d — '%s'", i, len(amounts), rest[:80])
+                skipped += 1
+                i += 1
+                continue
+
+            # Last amount = closing balance, second-to-last = transaction amount
+            closing_balance = _amt(amounts[-1])
+            txn_amount = _amt(amounts[-2])
+
+            if txn_amount == 0:
+                skipped += 1
+                i += 1
+                continue
+
+            # Narration = everything before the first amount in 'rest'
+            first_amt_pos = rest.find(amounts[0])
+            raw_middle = rest[:first_amt_pos].strip()
+
+            # Combine with continuation for full narration (for payee extraction)
+            full_narration = raw_middle
+            if len(narration_parts) > 1:
+                full_narration += " " + " ".join(narration_parts[1:])
+
+            # Parse date
+            try:
+                date = datetime.strptime(date_str, "%d/%m/%y").strftime("%Y-%m-%d")
+            except ValueError:
+                log.debug("    Line %d: date parse failed for '%s'", i, date_str)
+                skipped += 1
+                i += 1
+                continue
+
+            # Determine debit/credit by balance comparison
+            if closing_balance < prev_balance:
+                txn_type = "Debit"
+            elif closing_balance > prev_balance:
+                txn_type = "Credit"
+            else:
+                # Fallback to narration keywords
+                if "DR" in full_narration.upper() or "IMPS" in full_narration.upper():
                     txn_type = "Debit"
-                    amount = _amt(withdrawal)
-                elif deposit and deposit not in ("", "None", "-"):
-                    txn_type = "Credit"
-                    amount = _amt(deposit)
                 else:
-                    log.debug("      Row %d: SKIPPED — no withdrawal or deposit amount", row_idx)
-                    skipped += 1
-                    continue
+                    txn_type = "Credit"
 
-                if amount == 0:
-                    log.debug("      Row %d: SKIPPED — amount is 0", row_idx)
-                    skipped += 1
-                    continue
+            prev_balance = closing_balance
 
-                closing = _amt(balance) if balance and balance not in ("", "None") else None
-                payee, category = extract_payee(narration)
+            payee, category = extract_payee(full_narration)
 
-                log.debug("      Row %d: OK — %s | %s | %s ₹%.2f", row_idx, date, payee, txn_type, amount)
+            log.debug("    OK — %s | %s | %s ₹%.2f | bal ₹%.2f", date, payee, txn_type, txn_amount, closing_balance)
 
-                transactions.append({
-                    "Date": date,
-                    "Payee": payee,
-                    "Category": category,
-                    "Type": txn_type,
-                    "Amount": amount,
-                    "Balance": closing,
-                    "Bank": "HDFC",
-                    "Narration": narration,
-                })
+            transactions.append({
+                "Date": date,
+                "Payee": payee,
+                "Category": category,
+                "Type": txn_type,
+                "Amount": txn_amount,
+                "Balance": closing_balance,
+                "Bank": "HDFC",
+                "Narration": full_narration.strip(),
+            })
 
-    log.info("HDFC Parser: Done — %d transactions, %d rows skipped", len(transactions), skipped)
+            i += 1
+
+    log.info("HDFC Parser: Done — %d transactions, %d skipped", len(transactions), skipped)
 
     df = pd.DataFrame(transactions)
     if not df.empty:

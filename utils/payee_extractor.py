@@ -3,6 +3,7 @@ import re
 
 def extract_payee(narration: str) -> tuple[str, str]:
     """Extract payee name and transaction category from narration.
+    Uses re.search so patterns match anywhere in the text (not just at start).
     Returns (payee, category).
     """
     if not narration:
@@ -11,41 +12,48 @@ def extract_payee(narration: str) -> tuple[str, str]:
     text = narration.strip()
 
     # UPI: UPI/CR|DR/refno/NAME/BANK/...
-    upi = re.match(r"UPI/(CR|DR)/\d+/([^/]+)", text)
+    # Capture name as everything between refno/ and next / (full segment including spaces)
+    upi = re.search(r"UPI/(CR|DR)/(\d+)/([^/]+)", text)
     if upi:
-        name = upi.group(2).strip()
-        name = re.sub(r"\s+", " ", name)
-        return (name.title(), "UPI")
+        name = upi.group(3).strip()
+        # Clean truncated trailing junk
+        name = re.sub(r"\s+$", "", name)
+        if name:
+            return (name.title(), "UPI")
 
     # NEFT (HDFC): NEFT DR-IFSC-NAME-NETBANK
-    neft_hdfc = re.match(r"NEFT\s+(DR|CR)-\w+-(.+?)-(?:NETBANK|NEFT)", text)
+    neft_hdfc = re.search(r"NEFT\s+(DR|CR)-\w+-(.+?)-(?:NETBANK|NEFT)", text)
     if neft_hdfc:
         return (neft_hdfc.group(2).strip().title(), "NEFT")
 
     # NEFT (generic): NEFT/refno/NAME/...
-    neft_gen = re.match(r"NEFT[\s/-]+\d+[/-]([^/-]+)", text)
+    neft_gen = re.search(r"NEFT[\s/-]+\d+[/-]([^/-]+)", text)
     if neft_gen:
         return (neft_gen.group(1).strip().title(), "NEFT")
 
     # IMPS: IMPS-refno-NAME or IMPSAB-refno-NAME
-    imps = re.match(r"IMPS\w*[-\s]\d+[-\s](.+?)(?:[-/]|\s*$)", text)
+    imps = re.search(r"IMPS\w*[-\s]\d+[-\s](.+?)(?:[-/]|\s*$)", text)
     if imps:
         return (imps.group(1).strip().title(), "IMPS")
 
     # Salary: A2AINT##-COMPANY-SALARY
-    salary = re.match(r"A2AINT\d+-(.+?)-SALARY", text, re.IGNORECASE)
+    salary = re.search(r"A2AINT\d+-(.+?)-SALARY", text, re.IGNORECASE)
     if salary:
         return (salary.group(1).strip().title(), "Salary")
 
     # ATM: ATM CASH-code-LOCATION
-    if re.match(r"ATM\s+CASH", text, re.IGNORECASE):
-        loc = re.match(r"ATM\s+CASH-[^-]+-(.+)", text, re.IGNORECASE)
+    if re.search(r"ATM\s+CASH", text, re.IGNORECASE):
+        loc = re.search(r"ATM\s+CASH-[^-]+-(.+)", text, re.IGNORECASE)
         location = loc.group(1).strip() if loc else ""
-        label = f"ATM Withdrawal" + (f" — {location}" if location else "")
+        location = re.sub(r"\s*\d{2}/\d{2}/\d{2,4}\s*\d{0,2}:?\d{0,2}:?\d{0,2}.*", "", location).strip()
+        location = re.sub(r"/\d+$", "", location).strip()
+        label = "ATM Withdrawal"
+        if location:
+            label += f" — {location}"
         return (label, "ATM")
 
     # Cheque: Chq: number
-    if re.match(r"Chq:\s*\d+", text, re.IGNORECASE):
+    if re.search(r"Chq:\s*\d+", text, re.IGNORECASE):
         return ("Cheque", "Cheque")
 
     # Interest
@@ -59,7 +67,7 @@ def extract_payee(narration: str) -> tuple[str, str]:
         return ("Bank Charges", "Charges")
 
     # UPIAR (Union Bank UPI Auto Request)
-    upiar = re.match(r"UPIAR[-/](.+)", text)
+    upiar = re.search(r"UPIAR[-/](.+)", text)
     if upiar:
         details = upiar.group(1)
         handle = re.search(r"(\d+@[\w]+)", details)
@@ -68,11 +76,16 @@ def extract_payee(narration: str) -> tuple[str, str]:
         return (details[:30].strip(), "UPI")
 
     # Fallback: try to grab the first human-looking segment
-    cleaned = re.sub(r"^[\w]+[-/\s]+", "", text, count=1)
+    cleaned = re.sub(r"\d{2}/\d{2}/\d{2,4}\s+\d{0,2}:\d{0,2}:\d{0,2}", "", text)
+    cleaned = re.sub(r"\d{10,}", "", cleaned)  # remove long reference numbers
+    cleaned = re.sub(r"^[\W]+", "", cleaned).strip()
     if cleaned and len(cleaned) > 2:
-        for part in re.split(r"[-/@]", cleaned):
+        for part in re.split(r"[-/@\s]+", cleaned):
             part = part.strip()
-            if part and len(part) > 2 and not part.isdigit():
+            if part and len(part) > 2 and not part.isdigit() and not re.match(r"^\d{2,}$", part):
                 return (part.title(), "Other")
 
-    return (text[:40].strip(), "Other")
+    # Last resort
+    cleaned = re.sub(r"\d{2}/\d{2}/\d{2,4}\s+\d{0,2}:\d{0,2}:\d{0,2}", "", text[:60])
+    cleaned = re.sub(r"\d{10,}", "", cleaned).strip()
+    return (cleaned.strip() if cleaned.strip() else text[:30].strip(), "Other")
