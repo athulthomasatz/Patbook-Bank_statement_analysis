@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from utils.payee_extractor import extract_payee
+from utils.payee_extractor import extract_payee, extract_datetime
 
 log = logging.getLogger("union_parser")
 
@@ -64,11 +64,13 @@ def parse(pdf) -> pd.DataFrame:
 
                 closing = _parse_balance(balance_str)
                 payee, category = extract_payee(remarks)
+                txn_time = extract_datetime(remarks)
 
                 log.debug("      Row %d: OK — %s | %s | %s ₹%.2f", row_idx, date, payee, txn_type, amount)
 
                 transactions.append({
                     "Date": date,
+                    "Time": txn_time,
                     "Payee": payee,
                     "Category": category,
                     "Type": txn_type,
@@ -82,7 +84,11 @@ def parse(pdf) -> pd.DataFrame:
 
     df = pd.DataFrame(transactions)
     if not df.empty:
-        df = df.sort_values("Date").reset_index(drop=True)
+        # Add Time column if not present, then sort by DateTime
+        if "Time" not in df.columns:
+            df["Time"] = "00:00:00"
+        df["DateTime"] = pd.to_datetime(df["Date"] + " " + df["Time"], errors="coerce")
+        df = df.sort_values("DateTime").reset_index(drop=True).drop(columns=["DateTime"])
     return df
 
 

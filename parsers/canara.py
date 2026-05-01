@@ -5,7 +5,7 @@ from datetime import datetime
 import pdfplumber
 import pandas as pd
 
-from utils.payee_extractor import extract_payee
+from utils.payee_extractor import extract_payee, normalize, extract_datetime
 
 log = logging.getLogger("canara_parser")
 
@@ -42,7 +42,11 @@ def parse(pdf) -> pd.DataFrame:
 
     df = pd.DataFrame(transactions)
     if not df.empty:
-        df = df.sort_values("Date").reset_index(drop=True)
+        # Add Time column if not present, then sort by DateTime
+        if "Time" not in df.columns:
+            df["Time"] = "00:00:00"
+        df["DateTime"] = pd.to_datetime(df["Date"] + " " + df["Time"], errors="coerce")
+        df = df.sort_values("DateTime").reset_index(drop=True).drop(columns=["DateTime"])
     return df
 
 
@@ -170,28 +174,31 @@ def _parse_from_text(pdf) -> tuple[list, int]:
             i += 1
             continue
 
-        # Determine debit/credit: compare closing balance with previous balance
-        if closing < prev_balance:
+        # Determine debit/credit — priority: UPI/DR > UPI/CR > ATM > balance comparison
+        narration_upper = normalize(narration)
+        if "UPI/DR" in narration_upper:
+            txn_type = "Debit"
+        elif "UPI/CR" in narration_upper:
+            txn_type = "Credit"
+        elif "ATM" in narration_upper:
+            txn_type = "Debit"
+        elif closing < prev_balance:
             txn_type = "Debit"
         elif closing > prev_balance:
             txn_type = "Credit"
         else:
-            # Balance unchanged — fall back to narration keywords
-            if re.search(r"UPI/DR|ATM|WITHDRAWAL", narration, re.IGNORECASE):
-                txn_type = "Debit"
-            elif re.search(r"UPI/CR|DEPOSIT|SALARY", narration, re.IGNORECASE):
-                txn_type = "Credit"
-            else:
-                txn_type = "Credit"
+            txn_type = "Credit"
 
         prev_balance = closing
 
         payee, category = extract_payee(narration)
+        txn_time = extract_datetime(narration)
 
         log.debug("    OK — %s | %s | %s ₹%.2f | bal ₹%.2f", date, payee, txn_type, txn_amount, closing)
 
         transactions.append({
             "Date": date,
+            "Time": txn_time,
             "Payee": payee,
             "Category": category,
             "Type": txn_type,
@@ -246,9 +253,11 @@ def _process_row(date_str, particulars, deposits, withdrawals, balance):
 
     closing = _amt(balance) if balance and balance not in ("", "None") else None
     payee, category = extract_payee(particulars)
+    txn_time = extract_datetime(particulars)
 
     return {
         "Date": date,
+        "Time": txn_time,
         "Payee": payee,
         "Category": category,
         "Type": txn_type,
