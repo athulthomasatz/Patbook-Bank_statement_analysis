@@ -31,7 +31,9 @@ def normalize(text):
 
     # Join single-letter fragments at end of word (FLIPKAR T → FLIPKART)
     # SAFER: Only join if left side is 3+ chars and right side is exactly 1 letter
-    text = re.sub(r'([A-Z]{3,})\s+([A-Z])\b(?!\s*-\s*\d)(?!-\d)', r'\1\2', text)
+    # text = re.sub(r'([A-Z]{3,})\s+([A-Z])\b(?!\s*-\s*\d)(?!-\d)', r'\1\2', text)
+    # FIX: join broken words (HOSTIN GER → HOSTINGER)
+    text = re.sub(r'([A-Z]{3,})\s+([A-Z]{2,})', r'\1\2', text)
 
     # Normalize spaces
     text = re.sub(r'\s+', ' ', text)
@@ -168,72 +170,29 @@ def _extract_upi(text):
     parts = [p.strip() for p in text.split("/") if p.strip()]
     log.debug(f"      _extract_upi parts ({len(parts)}): {parts[:6]}{'...' if len(parts) > 6 else ''}")
 
-    # Try position-based extraction first (index 3 = name)
-    if len(parts) >= 4:
-        candidate = parts[3]
-        log.debug(f"      Position-based: parts[3] = '{candidate}'")
+    # Try multiple possible positions
+    possible_indexes = [3, 2, 4]
 
-        # Skip obvious garbage
-        if candidate not in NOISE and not candidate.isdigit():
-            name = clean_name(candidate)
-            log.debug(f"      Candidate passed noise check → clean_name: '{name}'")
+    for idx in possible_indexes:
+        if len(parts) > idx:
+            candidate = parts[idx]
 
-            # Check self-transfer
-            if is_self_transfer(name):
-                log.debug(f"      Detected self-transfer")
-                return (name + " (Self)", "Self Transfer")
-
-            # Check mandate
-            if "MANDATE" in name:
-                clean = clean_name(name.replace("Mandate", "").strip())
-                log.debug(f"      Detected mandate → cleaned: '{clean}'")
-                return (clean if clean else "Mandate", "Subscription")
-
-            log.debug(f"      Using position-based payee: '{name}'")
-            return (name, "UPI")
-        else:
-            log.debug(f"      parts[3] skipped: in NOISE={candidate in NOISE}, is_digit={candidate.isdigit()}")
-
-    # Fallback: strict token search with stronger filters
-    log.debug("      Trying fallback token search...")
-    for idx, part in enumerate(parts):
-        if part in NOISE:
-            log.debug(f"      Part {idx} '{part}': SKIPPED (in NOISE)")
-            continue
-        if part.isdigit():
-            log.debug(f"      Part {idx} '{part}': SKIPPED (is digit)")
-            continue
-        if re.search(r'\d', part):
-            log.debug(f"      Part {idx} '{part}': SKIPPED (contains digits)")
-            continue
-        if len(part) < 4:
-            log.debug(f"      Part {idx} '{part}': SKIPPED (length < 4)")
-            continue
-        if re.match(r'^[A-Z]{2,5}$', part):
-            log.debug(f"      Part {idx} '{part}': SKIPPED (looks like bank code)")
-            continue
-        if len(part) >= 10:
-            digit_ratio = sum(c.isdigit() for c in part) / len(part)
-            if digit_ratio > 0.3:
-                log.debug(f"      Part {idx} '{part}': SKIPPED (digit ratio {digit_ratio:.2f} > 0.3)")
+            if candidate in NOISE:
+                continue
+            if candidate.isdigit():
                 continue
 
-        name = clean_name(part)
-        log.debug(f"      Part {idx} '{part}': CLEANED to '{name}'")
+            name = clean_name(candidate)
 
-        if is_self_transfer(name):
-            log.debug(f"      Detected self-transfer from part {idx}")
-            return (name + " (Self)", "Self Transfer")
+            if is_self_transfer(name):
+                return (name + " (Self)", "Self Transfer")
 
-        if "MANDATE" in name:
-            clean = clean_name(name.replace("Mandate", "").strip())
-            log.debug(f"      Detected mandate from part {idx} → '{clean}'")
-            return (clean if clean else "Mandate", "Subscription")
+            if "MANDATE" in name:
+                clean = clean_name(name.replace("Mandate", "").strip())
+                return (clean if clean else "Mandate", "Subscription")
 
-        log.debug(f"      Using fallback payee from part {idx}: '{name}'")
-        return (name, "UPI")
+            return (name, "UPI")
 
-    log.debug("      No valid payee found in UPI, returning 'UPI Transaction'")
     return ("UPI Transaction", "UPI")
 
 
@@ -369,7 +328,7 @@ def _extract_merchant(text):
 # ---------- CLEAN NAME ----------
 
 def clean_name(name):
-    name = re.sub(r'[^A-Z ]', '', name.upper())
+    name = re.sub(r'[^A-Z0-9 ]', '', name.upper())
     name = name.strip()
     for code in STATE_CODES:
         if name.endswith(code):

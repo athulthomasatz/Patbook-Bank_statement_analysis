@@ -123,6 +123,11 @@ def _parse_from_text(pdf) -> tuple[list, int]:
             i += 1
             continue
 
+        # Skip opening balance line
+        if "opening balance" in line.lower():
+            i += 1
+            continue
+
         # Skip header / non-transaction lines
         if line.startswith("Date") or "Particulars" in line:
             i += 1
@@ -136,16 +141,20 @@ def _parse_from_text(pdf) -> tuple[list, int]:
         date_str = date_match.group(1)
         rest = date_match.group(2).strip()
 
-        # Extract all amounts (X,XXX.XX) from the line
+        # Extract amounts
         amounts = amount_re.findall(rest)
 
+        # FIX: handle multiline amounts (first txn issue)
         if len(amounts) < 2:
-            log.debug("    Line %d: need >=2 amounts, got %d — '%s'", i, len(amounts), line[:80])
-            skipped += 1
-            i += 1
-            continue
+            if i + 1 < len(all_lines):
+                next_line = all_lines[i + 1]
+                amounts.extend(amount_re.findall(next_line))
 
-        # Last amount = closing balance, second-to-last = transaction amount
+            if len(amounts) < 2:
+                skipped += 1
+                i += 1
+                continue
+
         closing = _amt(amounts[-1])
         txn_amount = _amt(amounts[-2])
 
@@ -154,48 +163,52 @@ def _parse_from_text(pdf) -> tuple[list, int]:
             i += 1
             continue
 
-        # Narration = everything before first amount in the line
+        # Extract narration
         first_amt_pos = rest.find(amounts[0])
         narration = rest[:first_amt_pos].strip()
 
-        # Collect continuation lines AFTER the date
-        # INCLUDE UPI/NEFT/IMPS lines as they contain the payee information
+        # FIXED SAFE MERGING (no wrong date mixing)
         while i + 1 < len(all_lines):
             next_line = all_lines[i + 1].strip()
-            if not next_line or date_re.match(next_line):
+
+            if not next_line:
                 break
-            if next_line.lower().startswith(("date", "opening", "closing", "statement", "generated", "page")):
+
+            # STOP if new transaction
+            if re.match(r"^\d{2}-\d{2}-\d{4}", next_line):
                 break
-            # Don't break on UPI/NEFT/IMPS lines - include them in narration
-            # Only skip cheque continuation rows
-            if re.match(r"Chq:\s*\d+", next_line, re.IGNORECASE):
-                i += 1
-                continue
+
+            # STOP if amount present → new txn
+            if re.search(r"\d{1,3}(,\d{3})*\.\d{2}", next_line):
+                break
+
+            # STOP unwanted lines
+            if next_line.lower().startswith(("date", "opening", "closing", "statement", "page")):
+                break
+
             narration += " " + next_line
             i += 1
 
-        # Also look BACKWARDS for UPI lines before this transaction
-        # Some PDFs have UPI lines above the date line
-        if "UPI" not in narration and "IMPS" not in narration and "NEFT" not in narration:
-            lookback = 1
-            while i - lookback >= 0:
-                prev_line = all_lines[i - lookback].strip()
-                if not prev_line:
-                    lookback += 1
-                    continue
-                if date_re.match(prev_line):
-                    break  # Stop at previous transaction
-                if re.match(r"Chq:\s*\d+", prev_line, re.IGNORECASE):
-                    lookback += 1
-                    continue
-                if prev_line.lower().startswith(("date", "opening", "closing", "statement", "generated", "page")):
-                    break
-                # Add this line to narration (prepend)
-                narration = prev_line + " " + narration
+        # ALWAYS look back (fix first transaction)
+        lookback = 1
+        while i - lookback >= 0:
+            prev_line = all_lines[i - lookback].strip()
+
+            if not prev_line:
                 lookback += 1
-                # Limit lookback to avoid going too far
-                if lookback > 10:
-                    break
+                continue
+
+            if re.match(r"^\d{2}-\d{2}-\d{4}", prev_line):
+                break
+
+            if prev_line.lower().startswith(("date", "opening", "closing", "statement", "page")):
+                break
+
+            narration = prev_line + " " + narration
+            lookback += 1
+
+            if lookback > 10:
+                break
 
         # Parse date
         try:
@@ -213,9 +226,8 @@ def _parse_from_text(pdf) -> tuple[list, int]:
         # Determine debit/credit using get_type() from payee_extractor
         txn_type = get_type(narration)
 
-        # Fallback to balance-based detection if get_type() returns default
-        if (txn_type == "Debit" and closing > prev_balance) or (txn_type == "Credit" and closing < prev_balance):
-            # Balance contradicts the type from narration, use balance-based logic
+        # Only fallback if unclear
+        if txn_type not in ["Credit", "Debit"]:
             txn_type = "Debit" if closing < prev_balance else "Credit"
 
         prev_balance = closing
