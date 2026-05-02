@@ -16,13 +16,17 @@ def _extract_federal_payee_category(narration: str, tran_type: str) -> tuple[str
     UPI Format: UPIOUT/<id>/<vpa>/... -> extract VPA as payee
     IFN Format: IFN/<id> <description> -> extract category from description
     """
-    narration_upper = narration.upper()
+    # First, normalize the narration to fix line breaks
+    # Remove hyphens that are line breaks (hyphen followed by space/newline)
+    normalized = re.sub(r'-\s+', '', narration)
+
+    narration_upper = normalized.upper()
 
     # Handle UPI transactions - format: UPIOUT/<id>/<vpa>/...
     if "UPIOUT" in narration_upper or "UPI IN" in narration_upper:
         # Try to extract VPA (Virtual Payment Address)
         # Pattern: UPIOUT/123456789012/user@bank/...
-        parts = narration.split("/")
+        parts = normalized.split("/")
         if len(parts) >= 3:
             # The VPA is typically the 3rd part (index 2)
             vpa = parts[2].strip()
