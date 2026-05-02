@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, extract_datetime
+from utils.payee_extractor import extract_payee, extract_datetime_tuple, normalize
 
 log = logging.getLogger("hdfc_parser")
 
@@ -96,6 +96,10 @@ def parse(pdf) -> pd.DataFrame:
                 i += 1
                 continue
 
+            # Extract time if present
+            txn_date_obj, txn_time_obj = extract_datetime_tuple(full_narration)
+            txn_time = str(txn_time_obj) if txn_time_obj else ""
+
             # Determine debit/credit by balance comparison
             if closing_balance < prev_balance:
                 txn_type = "Debit"
@@ -103,7 +107,8 @@ def parse(pdf) -> pd.DataFrame:
                 txn_type = "Credit"
             else:
                 # Fallback to narration keywords
-                if "DR" in full_narration.upper() or "IMPS" in full_narration.upper():
+                normalized = normalize(full_narration)
+                if "DR" in normalized or "IMPS" in normalized:
                     txn_type = "Debit"
                 else:
                     txn_type = "Credit"
@@ -111,7 +116,6 @@ def parse(pdf) -> pd.DataFrame:
             prev_balance = closing_balance
 
             payee, category = extract_payee(full_narration)
-            txn_time = extract_datetime(full_narration)
 
             log.debug("    OK — %s | %s | %s ₹%.2f | bal ₹%.2f", date, payee, txn_type, txn_amount, closing_balance)
 
@@ -133,11 +137,21 @@ def parse(pdf) -> pd.DataFrame:
 
     df = pd.DataFrame(transactions)
     if not df.empty:
-        # Add Time column if not present, then sort by DateTime
-        if "Time" not in df.columns:
-            df["Time"] = "00:00:00"
-        df["DateTime"] = pd.to_datetime(df["Date"] + " " + df["Time"], errors="coerce")
+        # Convert empty Time strings to '00:00:00' for proper datetime parsing
+        df["Time"] = df["Time"].replace("", "00:00:00").fillna("00:00:00")
+
+        # Sort by Date and Time
+        df["DateTime"] = pd.to_datetime(
+            df["Date"] + " " + df["Time"],
+            format="%Y-%m-%d %H:%M:%S",
+            errors="coerce"
+        )
         df = df.sort_values("DateTime").reset_index(drop=True).drop(columns=["DateTime"])
+
+        # Drop Time column after sorting
+        if "Time" in df.columns:
+            df = df.drop(columns=["Time"])
+
     return df
 
 

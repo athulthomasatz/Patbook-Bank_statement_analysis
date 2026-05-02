@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from utils.pdf_loader import load_pdf
 from parsers import get_parser, PARSERS
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger("api")
 
 app = FastAPI(title="Bank Statement Analyzer")

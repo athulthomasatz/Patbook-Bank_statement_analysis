@@ -5,7 +5,7 @@ from datetime import datetime
 import pdfplumber
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, normalize, extract_datetime
+from utils.payee_extractor import extract_payee, normalize, extract_datetime_tuple, get_type
 
 log = logging.getLogger("canara_parser")
 
@@ -42,11 +42,21 @@ def parse(pdf) -> pd.DataFrame:
 
     df = pd.DataFrame(transactions)
     if not df.empty:
-        # Add Time column if not present, then sort by DateTime
-        if "Time" not in df.columns:
-            df["Time"] = "00:00:00"
-        df["DateTime"] = pd.to_datetime(df["Date"] + " " + df["Time"], errors="coerce")
+        # Convert empty Time strings to '00:00:00' for proper datetime parsing
+        df["Time"] = df["Time"].replace("", "00:00:00").fillna("00:00:00")
+
+        # Sort by Date and Time
+        df["DateTime"] = pd.to_datetime(
+            df["Date"] + " " + df["Time"],
+            format="%Y-%m-%d %H:%M:%S",
+            errors="coerce"
+        )
         df = df.sort_values("DateTime").reset_index(drop=True).drop(columns=["DateTime"])
+
+        # Drop Time column after sorting
+        if "Time" in df.columns:
+            df = df.drop(columns=["Time"])
+
     return df
 
 
@@ -79,13 +89,12 @@ def _parse_from_tables(pdf) -> tuple[list, int]:
 
 
 def _parse_from_text(pdf) -> tuple[list, int]:
-    """Parse using raw text extraction (fallback for borderless tables).
-    Uses balance comparison to determine debit vs credit reliably."""
+    """Parse using raw text extraction (fallback for borderless tables)."""
     transactions = []
     skipped = 0
 
     amount_re = re.compile(r"([\d,]+\.\d{2})")
-    date_re = re.compile(r"^(\d{2}-\d{2}-\d{4})\s+(.*)")
+    date_re = re.compile(r"^(\d{2}-\d{2}-\d{4})\b\s*(.*)")
 
     # Collect all text across pages to track running balance
     all_lines = []
@@ -149,21 +158,44 @@ def _parse_from_text(pdf) -> tuple[list, int]:
         first_amt_pos = rest.find(amounts[0])
         narration = rest[:first_amt_pos].strip()
 
-        # Collect continuation lines — but STOP if it looks like a new transaction
+        # Collect continuation lines AFTER the date
+        # INCLUDE UPI/NEFT/IMPS lines as they contain the payee information
         while i + 1 < len(all_lines):
             next_line = all_lines[i + 1].strip()
             if not next_line or date_re.match(next_line):
                 break
             if next_line.lower().startswith(("date", "opening", "closing", "statement", "generated", "page")):
                 break
-            # Stop if this looks like a new transaction (starts with transaction type keywords)
-            if re.match(r"(UPI|NEFT|IMPS|ATM|Chq:)\s*[/\-:]", next_line, re.IGNORECASE):
-                break
+            # Don't break on UPI/NEFT/IMPS lines - include them in narration
+            # Only skip cheque continuation rows
             if re.match(r"Chq:\s*\d+", next_line, re.IGNORECASE):
                 i += 1
-                continue  # skip Chq continuation lines
+                continue
             narration += " " + next_line
             i += 1
+
+        # Also look BACKWARDS for UPI lines before this transaction
+        # Some PDFs have UPI lines above the date line
+        if "UPI" not in narration and "IMPS" not in narration and "NEFT" not in narration:
+            lookback = 1
+            while i - lookback >= 0:
+                prev_line = all_lines[i - lookback].strip()
+                if not prev_line:
+                    lookback += 1
+                    continue
+                if date_re.match(prev_line):
+                    break  # Stop at previous transaction
+                if re.match(r"Chq:\s*\d+", prev_line, re.IGNORECASE):
+                    lookback += 1
+                    continue
+                if prev_line.lower().startswith(("date", "opening", "closing", "statement", "generated", "page")):
+                    break
+                # Add this line to narration (prepend)
+                narration = prev_line + " " + narration
+                lookback += 1
+                # Limit lookback to avoid going too far
+                if lookback > 10:
+                    break
 
         # Parse date
         try:
@@ -174,25 +206,21 @@ def _parse_from_text(pdf) -> tuple[list, int]:
             i += 1
             continue
 
-        # Determine debit/credit — priority: UPI/DR > UPI/CR > ATM > balance comparison
-        narration_upper = normalize(narration)
-        if "UPI/DR" in narration_upper:
-            txn_type = "Debit"
-        elif "UPI/CR" in narration_upper:
-            txn_type = "Credit"
-        elif "ATM" in narration_upper:
-            txn_type = "Debit"
-        elif closing < prev_balance:
-            txn_type = "Debit"
-        elif closing > prev_balance:
-            txn_type = "Credit"
-        else:
-            txn_type = "Credit"
+        # Extract time if present
+        txn_date_obj, txn_time_obj = extract_datetime_tuple(narration)
+        txn_time = str(txn_time_obj) if txn_time_obj else ""
+
+        # Determine debit/credit using get_type() from payee_extractor
+        txn_type = get_type(narration)
+
+        # Fallback to balance-based detection if get_type() returns default
+        if (txn_type == "Debit" and closing > prev_balance) or (txn_type == "Credit" and closing < prev_balance):
+            # Balance contradicts the type from narration, use balance-based logic
+            txn_type = "Debit" if closing < prev_balance else "Credit"
 
         prev_balance = closing
 
         payee, category = extract_payee(narration)
-        txn_time = extract_datetime(narration)
 
         log.debug("    OK — %s | %s | %s ₹%.2f | bal ₹%.2f", date, payee, txn_type, txn_amount, closing)
 
@@ -252,8 +280,12 @@ def _process_row(date_str, particulars, deposits, withdrawals, balance):
         return None
 
     closing = _amt(balance) if balance and balance not in ("", "None") else None
+
+    # Extract time
+    txn_date_obj, txn_time_obj = extract_datetime_tuple(particulars)
+    txn_time = str(txn_time_obj) if txn_time_obj else ""
+
     payee, category = extract_payee(particulars)
-    txn_time = extract_datetime(particulars)
 
     return {
         "Date": date,

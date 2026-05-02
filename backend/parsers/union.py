@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, extract_datetime
+from utils.payee_extractor import extract_payee, extract_datetime_tuple
 
 log = logging.getLogger("union_parser")
 
@@ -63,8 +63,12 @@ def parse(pdf) -> pd.DataFrame:
                     continue
 
                 closing = _parse_balance(balance_str)
+
+                # Extract time
+                txn_date_obj, txn_time_obj = extract_datetime_tuple(remarks)
+                txn_time = str(txn_time_obj) if txn_time_obj else ""
+
                 payee, category = extract_payee(remarks)
-                txn_time = extract_datetime(remarks)
 
                 log.debug("      Row %d: OK — %s | %s | %s ₹%.2f", row_idx, date, payee, txn_type, amount)
 
@@ -84,11 +88,21 @@ def parse(pdf) -> pd.DataFrame:
 
     df = pd.DataFrame(transactions)
     if not df.empty:
-        # Add Time column if not present, then sort by DateTime
-        if "Time" not in df.columns:
-            df["Time"] = "00:00:00"
-        df["DateTime"] = pd.to_datetime(df["Date"] + " " + df["Time"], errors="coerce")
+        # Convert empty Time strings to '00:00:00' for proper datetime parsing
+        df["Time"] = df["Time"].replace("", "00:00:00").fillna("00:00:00")
+
+        # Sort by Date and Time
+        df["DateTime"] = pd.to_datetime(
+            df["Date"] + " " + df["Time"],
+            format="%Y-%m-%d %H:%M:%S",
+            errors="coerce"
+        )
         df = df.sort_values("DateTime").reset_index(drop=True).drop(columns=["DateTime"])
+
+        # Drop Time column after sorting
+        if "Time" in df.columns:
+            df = df.drop(columns=["Time"])
+
     return df
 
 
