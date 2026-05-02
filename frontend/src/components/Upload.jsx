@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const BANKS = ["HDFC", "Canara", "Union Bank"];
+const BANKS = ["HDFC", "Canara", "Union Bank", "Federal Bank"];
 
 export default function Upload({ onResult, loading, setLoading }) {
   const [bank, setBank] = useState("HDFC");

@@ -70,6 +70,11 @@ def parse(pdf) -> pd.DataFrame:
 
                 payee, category = extract_payee(remarks)
 
+                # Union Bank-specific mappings
+                if payee == "INDIAN":
+                    payee = "Zerodha"
+                    category = "MF Mutual Funds"
+
                 log.debug("      Row %d: OK — %s | %s | %s ₹%.2f", row_idx, date, payee, txn_type, amount)
 
                 transactions.append({

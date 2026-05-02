@@ -19,9 +19,8 @@ STATE_CODES = {
 }
 
 # Merchant name mappings (key -> (mapped_name, category))
-MERCHANT_MAPPINGS = {
-    "INDIAN": ("Zerodha", "MF Mutual Funds"),
-}
+# Note: Bank-specific mappings should be handled in individual bank parsers
+MERCHANT_MAPPINGS = {}
 
 
 # ---------- NORMALIZATION ----------
