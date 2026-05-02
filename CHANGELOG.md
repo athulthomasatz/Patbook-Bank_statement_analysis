@@ -8,13 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Analytics Dashboard** - New visual analytics view with interactive charts:
-  - Financial Overview cards showing Total Debit, Total Credit, and Net Balance
-  - Spending by Category pie chart (top 10 categories with percentages)
-  - Debit vs Credit donut chart
-  - Transactions by Date bar chart (last 14 days)
-  - Spending by Payment Method pie chart (UPI, IMPS, IFN, ATM, NEFT, etc.)
-  - Navigation tabs to switch between Transactions and Analytics views
+- **Advanced Analytics Dashboard** - Comprehensive financial insights with:
+  - **Smart Category Insights**: Category drift detection (month-over-month spending changes), Top growing category highlight
+  - **Risk & Alert System**: Unusual transaction detection (amount > 2x category average), Low balance warnings (< ₹1,000), High frequency spending alerts (>5 transactions/day)
+  - **Payment Method Intelligence**: ATM vs Digital spending comparison, Preferred payment method percentages
+  - **Merchant Intelligence**: Top merchants by amount and frequency, Hidden spending tracker (₹10-₹50 small purchases)
+  - **Savings & Efficiency**: Savings rate calculation, Expense ratio by category
+  - Collapsible sections with Expand/Collapse All functionality
+- **Bank Mismatch Detection** - Warning when no transactions are parsed, suggesting possible bank selection error
+- **Loading States** - Global loading overlay with spinner during PDF processing
+- **Status Indicators** - Success, warning, and error states with appropriate icons and colors
 - **Federal Bank parser** - New parser for Federal Bank statements with support for:
   - Table-based extraction with multi-line narration handling
   - UPI transactions (extracts VPA/payee from `UPIOUT/<id>/<vpa>` format)

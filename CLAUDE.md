@@ -91,7 +91,7 @@ Add new merchant mappings to `MERCHANT_MAPPINGS` to improve categorization.
 
 ## Analytics Dashboard
 
-The application includes an analytics dashboard (`frontend/src/components/Analytics.jsx`) that provides visual insights into transaction data:
+The application includes a comprehensive analytics dashboard (`frontend/src/components/Analytics.jsx`) that provides visual insights into transaction data:
 
 ### Charts and Visualizations
 
@@ -118,6 +118,30 @@ The application includes an analytics dashboard (`frontend/src/components/Analyt
    - Groups transactions by payment method extracted from narration
    - Methods: UPI, IMPS, IFN, ATM, NEFT, RTGS, Cheque, Other
    - Helps understand preferred payment channels
+
+### Advanced Analytics Features
+
+#### Smart Category Insights
+- **Category Drift Detection**: Compares current month vs previous month spending by category
+- **Top Growing Category**: Highlights the category with highest/lowest growth rate with percentage change
+
+#### Risk & Alert System
+- **Unusual Transaction Detection**: Flags transactions where amount > 2x category average
+- **Low Balance Warning**: Tracks periods when balance dropped below ₹1,000
+- **High Frequency Spending**: Flags days with >5 transactions (potential impulse buying)
+
+#### Payment Method Intelligence
+- **ATM vs Digital**: Compares ATM withdrawal total vs digital payment total
+- **Preferred Payment Methods**: Shows percentage breakdown with progress bars
+
+#### Merchant Intelligence
+- **Top Merchants by Amount**: Top 10 merchants by total spending
+- **Merchant Frequency**: Top 10 most frequently used merchants
+- **Hidden Spending**: Tracks small purchases (₹10-₹50) and shows cumulative impact by category
+
+#### Savings & Efficiency Metrics
+- **Savings Rate**: Calculates (income - expense) / income as percentage
+- **Expense Ratio**: Shows % of income spent on each category
 
 ### Transaction Method Detection
 
@@ -146,3 +170,23 @@ To add new charts or analytics:
 2. Use Recharts components (PieChart, BarChart, LineChart, etc.)
 3. Process data using `useMemo` for performance
 4. Follow existing color palette and styling patterns
+
+## Error Handling & User Feedback
+
+### Bank Mismatch Detection
+When parsing returns zero transactions, the app displays a warning suggesting possible bank selection error:
+- Yellow warning banner with explanation
+- Reference to Debug Logs for more details
+- Prevents confusion when wrong bank is selected
+
+### Loading States
+- **Global Loading Overlay**: Full-screen overlay with spinner during PDF processing
+- **Button Loading State**: Upload button shows spinner and "Processing..." text
+- **Status Indicators**: Success (green), Warning (yellow), Error (red) states with icons
+
+### Status States in Upload Component
+- `idle`: No file or processing started
+- `loading`: Currently processing PDF
+- `success`: Processing completed successfully
+- `error`: Processing failed with error message
+- `warning`: No transactions found (possible bank mismatch)
