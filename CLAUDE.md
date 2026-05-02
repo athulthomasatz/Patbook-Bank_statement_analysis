@@ -18,8 +18,10 @@ Bank Statement Analyzer - A web application for parsing, analyzing, and exportin
 ### Frontend (React/Vite)
 - **Entry point**: `frontend/src/main.jsx` - React app entry
 - **API Client**: `frontend/src/api.js` - Functions: getBanks(), parseStatement(), downloadCSV()
-- **Components**: Upload, Summary, Filters, Table, DebugLogs, ExportDialog
+- **Components**: Upload, Summary, Filters, Table, DebugLogs, ExportDialog, Analytics
 - **State Management**: Uses React useState for transactions, filters, and editable transaction fields
+- **Chart Library**: Uses Recharts for visual analytics (pie charts, bar charts)
+- **Navigation**: Tab-based navigation to switch between Transactions and Analytics views
 
 ## Common Commands
 
@@ -36,6 +38,7 @@ Backend runs on http://localhost:8000 by default (uvicorn default).
 ```bash
 cd frontend
 npm install
+npm install recharts  # Required for analytics charts
 npm run dev
 ```
 
@@ -85,3 +88,61 @@ The `payee_extractor.py` module handles:
 - UPI transaction parsing (format: `UPI/CR|DR/REFNO/NAME/BANK/...`)
 
 Add new merchant mappings to `MERCHANT_MAPPINGS` to improve categorization.
+
+## Analytics Dashboard
+
+The application includes an analytics dashboard (`frontend/src/components/Analytics.jsx`) that provides visual insights into transaction data:
+
+### Charts and Visualizations
+
+1. **Financial Overview Cards**
+   - Total Debit (red) - sum of all debit transactions
+   - Total Credit (green) - sum of all credit transactions
+   - Net Balance (blue/red) - credits minus debits
+
+2. **Spending by Category** (Pie Chart)
+   - Groups debit transactions by Category
+   - Shows top 10 categories with percentages
+   - Hover displays exact amounts
+
+3. **Debit vs Credit** (Donut Chart)
+   - Visual comparison of money flowing in vs out
+   - Color-coded: red for debit, green for credit
+
+4. **Transactions by Date** (Bar Chart)
+   - Shows transaction count per day
+   - Displays last 14 days of activity
+   - Helps identify spending patterns over time
+
+5. **Spending by Payment Method** (Pie Chart)
+   - Groups transactions by payment method extracted from narration
+   - Methods: UPI, IMPS, IFN, ATM, NEFT, RTGS, Cheque, Other
+   - Helps understand preferred payment channels
+
+### Transaction Method Detection
+
+Payment methods are detected from narration text using keyword matching:
+- `UPI` → UPI
+- `IMPS` → IMPS
+- `IFN` → IFN
+- `ATM` → ATM
+- `NEFT` → NEFT
+- `RTGS` → RTGS
+- `CHEQUE` → Cheque
+- Default → Other
+
+### Dependencies
+
+The analytics feature uses the Recharts library:
+```bash
+cd frontend
+npm install recharts
+```
+
+### Adding New Analytics
+
+To add new charts or analytics:
+1. Add the chart logic in `frontend/src/components/Analytics.jsx`
+2. Use Recharts components (PieChart, BarChart, LineChart, etc.)
+3. Process data using `useMemo` for performance
+4. Follow existing color palette and styling patterns

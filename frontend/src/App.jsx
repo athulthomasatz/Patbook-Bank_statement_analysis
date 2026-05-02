@@ -5,11 +5,13 @@ import Filters from "./components/Filters";
 import Table from "./components/Table";
 import DebugLogs from "./components/DebugLogs";
 import ExportDialog from "./components/ExportDialog";
+import Analytics from "./components/Analytics";
 import { downloadCSV } from "./api";
 
 export default function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [view, setView] = useState("transactions"); // "transactions" | "analytics"
   const [typeFilter, setTypeFilter] = useState("All");
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
@@ -91,6 +93,32 @@ export default function App() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Navigation Tabs */}
+        {result && (
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setView("transactions")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                view === "transactions"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Transactions
+            </button>
+            <button
+              onClick={() => setView("analytics")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                view === "analytics"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Analytics
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6">
           {/* Sidebar: Upload */}
           <div>
@@ -114,23 +142,29 @@ export default function App() {
           <div className="space-y-5">
             {result ? (
               <>
-                <Summary summary={result.summary} />
-                <Filters
-                  typeFilter={typeFilter}
-                  setTypeFilter={setTypeFilter}
-                  category={category}
-                  setCategory={setCategory}
-                  categories={categories}
-                  search={search}
-                  setSearch={setSearch}
-                  onExport={() => setExportDialogOpen(true)}
-                />
-                <Table
-                  transactions={filtered}
-                  allTransactions={transactions}
-                  updateTransaction={updateTransaction}
-                  getTransactionValue={getTransactionValue}
-                />
+                {view === "transactions" ? (
+                  <>
+                    <Summary summary={result.summary} />
+                    <Filters
+                      typeFilter={typeFilter}
+                      setTypeFilter={setTypeFilter}
+                      category={category}
+                      setCategory={setCategory}
+                      categories={categories}
+                      search={search}
+                      setSearch={setSearch}
+                      onExport={() => setExportDialogOpen(true)}
+                    />
+                    <Table
+                      transactions={filtered}
+                      allTransactions={transactions}
+                      updateTransaction={updateTransaction}
+                      getTransactionValue={getTransactionValue}
+                    />
+                  </>
+                ) : (
+                  <Analytics transactions={transactions} />
+                )}
               </>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
