@@ -1,4 +1,4 @@
-export default function Filters({ typeFilter, setTypeFilter, category, setCategory, categories, search, setSearch }) {
+export default function Filters({ typeFilter, setTypeFilter, category, setCategory, categories, search, setSearch, onExport }) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
       {/* Type buttons */}
@@ -37,6 +37,14 @@ export default function Filters({ typeFilter, setTypeFilter, category, setCatego
         placeholder="Search payee..."
         className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
+      {/* Download CSV button */}
+      <button
+        onClick={onExport}
+        className="border border-blue-600 text-blue-600 rounded-lg px-4 py-1.5 text-sm font-medium hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        Download CSV
+      </button>
     </div>
   );
 }

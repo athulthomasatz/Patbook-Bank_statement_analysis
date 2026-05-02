@@ -4,6 +4,8 @@ import Summary from "./components/Summary";
 import Filters from "./components/Filters";
 import Table from "./components/Table";
 import DebugLogs from "./components/DebugLogs";
+import ExportDialog from "./components/ExportDialog";
+import { downloadCSV } from "./api";
 
 export default function App() {
   const [result, setResult] = useState(null);
@@ -11,8 +13,47 @@ export default function App() {
   const [typeFilter, setTypeFilter] = useState("All");
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [editedTransactions, setEditedTransactions] = useState(new Map());
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const transactions = result?.transactions || [];
+
+  // Helper to get edited value or original value
+  const getTransactionValue = (index, field) => {
+    const edit = editedTransactions.get(`${index}-${field}`);
+    return edit !== undefined ? edit.value : transactions[index]?.[field];
+  };
+
+  // Update a transaction field
+  const updateTransaction = (index, field, value) => {
+    setEditedTransactions(prev => {
+      const newMap = new Map(prev);
+      newMap.set(`${index}-${field}`, { value, timestamp: Date.now() });
+      return newMap;
+    });
+  };
+
+  // Apply edits to transactions for export
+  const getTransactionsForExport = () => {
+    return transactions.map((t, idx) => {
+      const editedCat = editedTransactions.get(`${idx}-Category`);
+      const editedNotes = editedTransactions.get(`${idx}-Notes`);
+      const result = { ...t };
+      if (editedCat) result.Category = editedCat.value;
+      if (editedNotes) result.Notes = editedNotes.value;
+      return result;
+    });
+  };
+
+  // Handle export with include notes flag
+  const handleExport = (includeNotes) => {
+    const txnsForExport = getTransactionsForExport();
+    if (!includeNotes) {
+      txnsForExport.forEach(t => delete t.Notes);
+    }
+    downloadCSV(txnsForExport, includeNotes);
+    setExportDialogOpen(false);
+  };
 
   const categories = useMemo(() => {
     if (!transactions.length) return ["All"];
@@ -28,8 +69,16 @@ export default function App() {
       const q = search.toLowerCase();
       data = data.filter((t) => t.Payee?.toLowerCase().includes(q));
     }
-    return data;
-  }, [transactions, typeFilter, category, search]);
+    // Apply edits to filtered transactions
+    return data.map((t, idx) => {
+      const originalIndex = transactions.indexOf(t);
+      return {
+        ...t,
+        Category: getTransactionValue(originalIndex, "Category"),
+        Notes: getTransactionValue(originalIndex, "Notes") || "",
+      };
+    });
+  }, [transactions, editedTransactions, typeFilter, category, search]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,8 +123,14 @@ export default function App() {
                   categories={categories}
                   search={search}
                   setSearch={setSearch}
+                  onExport={() => setExportDialogOpen(true)}
                 />
-                <Table transactions={filtered} allTransactions={transactions} />
+                <Table
+                  transactions={filtered}
+                  allTransactions={transactions}
+                  updateTransaction={updateTransaction}
+                  getTransactionValue={getTransactionValue}
+                />
               </>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
@@ -85,6 +140,13 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        onExport={handleExport}
+      />
     </div>
   );
 }

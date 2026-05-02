@@ -18,6 +18,11 @@ STATE_CODES = {
     "BRIN", "SKIN", "TRIN", "UKIN", "TGIN", "APIN", "KAIF",
 }
 
+# Merchant name mappings (key -> (mapped_name, category))
+MERCHANT_MAPPINGS = {
+    "INDIAN": ("Zerodha", "MF Mutual Funds"),
+}
+
 
 # ---------- NORMALIZATION ----------
 
@@ -198,6 +203,13 @@ def _extract_upi(text):
 
 def _extract_upiar(text):
     log.debug(f"      _extract_upiar input: {text[:80]}{'...' if len(text) > 80 else ''}")
+
+    # Check for "Indian C" mapping first (Union Bank specific)
+    if "INDIAN C" in text.upper():
+        name = "Zerodha"
+        log.debug(f"      Found 'Indian C' mapping → '{name}'")
+        return (name, "MF Mutual Funds")
+
     handle = re.search(r'@([A-Z0-9.-]+)', text, re.IGNORECASE)
     if handle:
         log.debug(f"      Found @ handle: {handle.group(1)}")
@@ -210,8 +222,10 @@ def _extract_upiar(text):
                 log.debug(f"      Extracted merchant before @: '{merchant}'")
                 if not merchant.isdigit() and len(merchant) > 2:
                     name = clean_name(merchant)
-                    log.debug(f"      Using UPIAR merchant: '{name}'")
-                    return (name, "UPI")
+                    # Apply merchant mapping if exists
+                    mapped_name, mapped_category = MERCHANT_MAPPINGS.get(name.upper(), (name, "UPI"))
+                    log.debug(f"      Using UPIAR merchant: '{mapped_name}'")
+                    return (mapped_name, mapped_category)
                 else:
                     log.debug(f"      Merchant skipped: is_digit={merchant.isdigit()}, len={len(merchant)}")
     else:
@@ -228,12 +242,14 @@ def _extract_upiar(text):
             merchant = part.split("@")[0]
             if merchant and len(merchant) > 2 and not merchant.isdigit():
                 name = clean_name(merchant)
-                log.debug(f"      Using @-split merchant: '{name}'")
-                return (name, "UPI")
+                mapped_name, mapped_category = MERCHANT_MAPPINGS.get(name.upper(), (name, "UPI"))
+                log.debug(f"      Using @-split merchant: '{mapped_name}'")
+                return (mapped_name, mapped_category)
         if part and len(part) > 2 and not part.isdigit():
             name = clean_name(part)
-            log.debug(f"      Using UPIAR part: '{name}'")
-            return (name, "UPI")
+            mapped_name, mapped_category = MERCHANT_MAPPINGS.get(name.upper(), (name, "UPI"))
+            log.debug(f"      Using UPIAR part: '{mapped_name}'")
+            return (mapped_name, mapped_category)
 
     log.debug("      No valid UPIAR payee found")
     return ("UPI Transaction", "UPI")

@@ -20,10 +20,13 @@ export async function parseStatement(file, bank, password = "") {
   return res.json();
 }
 
-export function downloadCSV(transactions) {
+export function downloadCSV(transactions, includeNotes = false) {
   if (!transactions.length) return;
 
-  const headers = ["Date", "Payee", "Category", "Type", "Amount", "Balance", "Bank", "Narration"];
+  const headers = includeNotes
+    ? ["Date", "Payee", "Category", "Type", "Amount", "Balance", "Bank", "Narration", "Notes"]
+    : ["Date", "Payee", "Category", "Type", "Amount", "Balance", "Bank", "Narration"];
+
   const rows = transactions.map((t) =>
     headers.map((h) => {
       const v = t[h] ?? "";
