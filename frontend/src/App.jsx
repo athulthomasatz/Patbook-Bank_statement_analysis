@@ -19,9 +19,9 @@ function Navigation() {
         <Link
           key={item.path}
           to={item.path}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
             location.pathname === item.path
-              ? "bg-slate-900 text-white shadow-sm"
+              ? "bg-black text-white shadow-md"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
