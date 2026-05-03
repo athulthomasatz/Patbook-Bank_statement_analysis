@@ -302,8 +302,8 @@ export default function Analytics({ transactions }) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setExpandedSection("all")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "all" ? "bg-black text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Expand all</button>
-            <button onClick={() => setExpandedSection("none")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "none" ? "bg-black text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Collapse all</button>
+            <button onClick={() => setExpandedSection("all")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "all" ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Expand all</button>
+            <button onClick={() => setExpandedSection("none")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "none" ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Collapse all</button>
           </div>
         </div>
 

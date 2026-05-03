@@ -32,3 +32,37 @@ select,
 textarea {
 	font: inherit;
 }
+
+/* Smooth transitions for interactive elements while respecting reduced motion */
+* {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+		animation-duration: 0.001ms !important;
+	}
+}
+
+/* Page transition - fade + slight lift */
+.page-transition {
+	opacity: 0;
+	transform: translateY(8px);
+}
+.page-transition.enter {
+	opacity: 1;
+	transform: translateY(0);
+	transition: opacity 280ms cubic-bezier(.2,.9,.2,1), transform 280ms cubic-bezier(.2,.9,.2,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-transition,
+	.page-transition.enter {
+		transition: none !important;
+		transform: none !important;
+		opacity: 1 !important;
+	}
+}

@@ -25,11 +25,11 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
+        className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-900 transition-all hover:bg-indigo-100 hover:border-indigo-300"
       >
         {label}
         <svg
-          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 transition-transform text-indigo-600`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -39,7 +39,7 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-indigo-200 bg-white shadow-lg">
           {items.map((item) => (
             <button
               type="button"
@@ -50,7 +50,7 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
                 onSelect(item.value);
                 setIsOpen(false);
               }}
-              className="block w-full px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 first:rounded-t-2xl last:rounded-b-2xl"
+              className="block w-full px-4 py-3 text-left text-sm text-indigo-900 transition-colors hover:bg-indigo-50 hover:text-indigo-950 first:rounded-t-2xl last:rounded-b-2xl"
             >
               {item.label}
             </button>

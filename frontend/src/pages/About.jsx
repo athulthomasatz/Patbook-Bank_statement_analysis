@@ -1,6 +1,9 @@
+import PageTransition from "../components/PageTransition";
+
 export default function About() {
   return (
-    <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)] sm:p-8">
+    <PageTransition>
+      <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)] sm:p-8">
       <div className="max-w-3xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">About Pattubook</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Built to make statement review feel calm and clear.</h2>
@@ -23,6 +26,7 @@ export default function About() {
           <p className="mt-2 text-sm leading-6 text-slate-600">Soft surfaces, rounded corners, and restrained accent colors make the screen easier to scan for long sessions.</p>
         </div>
       </div>
-    </div>
+      </div>
+    </PageTransition>
   );
 }

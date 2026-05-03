@@ -7,6 +7,7 @@ import DebugLogs from "../components/DebugLogs";
 import ExportDialog from "../components/ExportDialog";
 import Analytics from "../components/Analytics";
 import { downloadCSV } from "../api";
+import PageTransition from "../components/PageTransition";
 
 export default function Home({ transactions, setTransactions }) {
   const [loading, setLoading] = useState(false);
@@ -84,7 +85,8 @@ export default function Home({ transactions, setTransactions }) {
   }, [txns, editedTransactions, typeFilter, category, search]);
 
   return (
-    <div className="space-y-8">
+    <PageTransition>
+      <div className="space-y-8">
       {/* Global Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 backdrop-blur-sm">
@@ -177,41 +179,37 @@ export default function Home({ transactions, setTransactions }) {
                 </div>
               )}
 
-              {txns.length > 0 ? (
-                view === "transactions" ? (
-                  <div className="space-y-6">
-                    <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                      <Summary summary={summary} />
-                    </div>
-                    <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                      <Filters
-                        typeFilter={typeFilter}
-                        setTypeFilter={setTypeFilter}
-                        category={category}
-                        setCategory={setCategory}
-                        categories={categories}
-                        search={search}
-                        setSearch={setSearch}
-                        onExport={() => setExportDialogOpen(true)}
-                      />
-                    </div>
-                    <div className="overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                      <Table
-                        transactions={filtered}
-                        allTransactions={txns}
-                        updateTransaction={updateTransaction}
-                        getTransactionValue={getTransactionValue}
-                      />
-                    </div>
-                  </div>
-                ) : (
+              {txns.length > 0 && view === "transactions" && (
+                <div className="space-y-6">
                   <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                    <Analytics transactions={txns} />
+                    <Summary summary={summary} />
                   </div>
-                )
-              ) : (
-                <div className="rounded-[1.5rem] border border-white/80 bg-white p-12 text-center shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                  <p className="text-sm text-slate-500">No transactions to display</p>
+                  <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
+                    <Filters
+                      typeFilter={typeFilter}
+                      setTypeFilter={setTypeFilter}
+                      category={category}
+                      setCategory={setCategory}
+                      categories={categories}
+                      search={search}
+                      setSearch={setSearch}
+                      onExport={() => setExportDialogOpen(true)}
+                    />
+                  </div>
+                  <div className="overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
+                    <Table
+                      transactions={filtered}
+                      allTransactions={txns}
+                      updateTransaction={updateTransaction}
+                      getTransactionValue={getTransactionValue}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {txns.length > 0 && view === "analytics" && (
+                <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
+                  <Analytics transactions={txns} />
                 </div>
               )}
             </div>
@@ -229,6 +227,7 @@ export default function Home({ transactions, setTransactions }) {
         onClose={() => setExportDialogOpen(false)}
         onExport={handleExport}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 }
