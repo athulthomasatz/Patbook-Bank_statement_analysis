@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getBanks } from "../api";
+import Dropdown from "./Dropdown";
 
 export default function Upload({ onResult, loading, setLoading }) {
   const [bank, setBank] = useState("HDFC");
@@ -75,25 +76,16 @@ export default function Upload({ onResult, loading, setLoading }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Bank selector */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Bank</label>
-        <div className="relative">
-          <select
-            value={bank}
-            onChange={(e) => {
-              setBank(e.target.value);
-              setError(null);
-              setStatus("idle");
-            }}
-            className="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-11 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
-          >
-            {banks.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <label className="mb-2 block text-sm font-medium text-slate-700">Bank</label>
+        <Dropdown
+          label={bank}
+          items={banks.map(b => ({ label: b, value: b }))}
+          onSelect={(selectedBank) => {
+            setBank(selectedBank);
+            setError(null);
+            setStatus("idle");
+          }}
+        />
       </div>
 
       {/* File upload */}

@@ -19,7 +19,12 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
   return (
     <div ref={dropdownRef} className={`relative inline-block ${className}`}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
       >
         {label}
@@ -37,8 +42,11 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
         <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-slate-200 bg-white shadow-lg">
           {items.map((item) => (
             <button
+              type="button"
               key={item.value}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 onSelect(item.value);
                 setIsOpen(false);
               }}
