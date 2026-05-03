@@ -188,9 +188,6 @@ def _extract_upi(text):
 
             name = clean_name(candidate)
 
-            if is_self_transfer(name):
-                return (name + " (Self)", "Self Transfer")
-
             if "MANDATE" in name:
                 clean = clean_name(name.replace("Mandate", "").strip())
                 return (clean if clean else "Mandate", "Subscription")

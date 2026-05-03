@@ -29,10 +29,10 @@ export default function Table({ transactions, allTransactions, updateTransaction
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <div className="overflow-x-auto rounded-[1.5rem] border border-slate-200/70 bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+            <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Payee</th>
               <th className="px-4 py-3">Category</th>
@@ -42,20 +42,20 @@ export default function Table({ transactions, allTransactions, updateTransaction
               <th className="px-4 py-3">Notes</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-slate-100">
             {transactions.map((t, i) => {
               const originalIndex = getOriginalIndex(i);
               return (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{formatDate(t.Date)}</td>
-                  <td className="px-4 py-2.5 text-gray-900 font-medium max-w-[200px] truncate" title={t.Payee}>{t.Payee}</td>
+                <tr key={i} className="transition-colors hover:bg-slate-50">
+                  <td className="whitespace-nowrap px-4 py-2.5 text-slate-600">{formatDate(t.Date)}</td>
+                  <td className="max-w-[200px] truncate px-4 py-2.5 font-medium text-slate-900" title={t.Payee}>{t.Payee}</td>
 
                   {/* Editable Category */}
                   <td className="px-4 py-2.5">
                     {editingIndex === i && editingField === "Category" ? (
                       <select
                         autoFocus
-                        className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                         value={t.Category}
                         onChange={(e) => updateTransaction(originalIndex, "Category", e.target.value)}
                         onBlur={() => { setEditingIndex(null); setEditingField(null); }}
@@ -67,7 +67,7 @@ export default function Table({ transactions, allTransactions, updateTransaction
                       </select>
                     ) : (
                       <span
-                        className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full cursor-pointer hover:bg-gray-200"
+                        className="inline-block cursor-pointer rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 transition hover:bg-slate-200"
                         onClick={() => { setEditingIndex(i); setEditingField("Category"); }}
                       >
                         {t.Category}
@@ -76,17 +76,17 @@ export default function Table({ transactions, allTransactions, updateTransaction
                   </td>
 
                   <td className="px-4 py-2.5">
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                       t.Type === "Credit"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-rose-100 text-rose-700"
                     }`}>
                       {t.Type}
                     </span>
                   </td>
 
-                  <td className="px-4 py-2.5 text-right text-gray-900 font-mono">{formatAmount(t.Amount)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-500 font-mono">{formatAmount(t.Balance)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-slate-900">{formatAmount(t.Amount)}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-slate-500">{formatAmount(t.Balance)}</td>
 
                   {/* Editable Notes */}
                   <td className="px-4 py-2.5">
@@ -94,7 +94,7 @@ export default function Table({ transactions, allTransactions, updateTransaction
                       <input
                         type="text"
                         autoFocus
-                        className="border border-gray-300 rounded-lg px-2 py-1 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-40 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                         value={t.Notes || ""}
                         onChange={(e) => updateTransaction(originalIndex, "Notes", e.target.value)}
                         onBlur={() => { setEditingIndex(null); setEditingField(null); }}
@@ -102,10 +102,10 @@ export default function Table({ transactions, allTransactions, updateTransaction
                       />
                     ) : (
                       <span
-                        className="text-gray-600 text-xs cursor-pointer hover:text-gray-900"
+                        className="cursor-pointer text-xs text-slate-600 transition hover:text-slate-900"
                         onClick={() => { setEditingIndex(i); setEditingField("Notes"); }}
                       >
-                        {t.Notes || <span className="text-gray-300 italic">Add note</span>}
+                        {t.Notes || <span className="italic text-slate-300">Add note</span>}
                       </span>
                     )}
                   </td>
@@ -117,7 +117,7 @@ export default function Table({ transactions, allTransactions, updateTransaction
       </div>
 
       <div className="flex justify-between items-center mt-3">
-        <p className="text-xs text-gray-500">{transactions.length} of {allTransactions.length} transactions</p>
+        <p className="text-xs text-slate-500">{transactions.length} of {allTransactions.length} transactions</p>
       </div>
     </div>
   );

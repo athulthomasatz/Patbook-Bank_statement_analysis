@@ -1,212 +1,212 @@
 import { useMemo, useState } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
   Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
 } from "recharts";
 
 const COLORS = [
-  "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+  "#15196c",
+  "#4b6700",
+  "#54000a",
+  "#5156a7",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+  "#6366f1",
 ];
+
+function formatAmount(value) {
+  return `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(`${dateStr}T00:00:00`);
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+}
+
+function getMonth(dateStr) {
+  return dateStr?.substring(0, 7) || "";
+}
+
+function getTransactionMethod(narration) {
+  if (!narration) return "Other";
+  const upper = narration.toUpperCase();
+  if (upper.includes("UPI")) return "UPI";
+  if (upper.includes("IMPS")) return "IMPS";
+  if (upper.includes("IFN")) return "IFN";
+  if (upper.includes("ATM")) return "ATM";
+  if (upper.includes("NEFT")) return "NEFT";
+  if (upper.includes("RTGS")) return "RTGS";
+  if (upper.includes("CHEQUE")) return "Cheque";
+  return "Other";
+}
+
+function MetricCard({ label, value, detail, tone = "indigo" }) {
+  const toneClasses = {
+    indigo: "bg-indigo-50 text-indigo-900 border-indigo-100",
+    green: "bg-emerald-50 text-emerald-900 border-emerald-100",
+    rose: "bg-rose-50 text-rose-900 border-rose-100",
+    amber: "bg-amber-50 text-amber-900 border-amber-100",
+  };
+
+  return (
+    <div className={`rounded-[1.5rem] border p-5 shadow-[0_10px_40px_rgba(25,28,30,0.06)] ${toneClasses[tone]}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{value}</div>
+      {detail ? <p className="mt-2 text-sm text-slate-600">{detail}</p> : null}
+    </div>
+  );
+}
+
+function SectionCard({ title, subtitle, children }) {
+  return (
+    <section className="rounded-[1.5rem] border border-slate-200/70 bg-white p-5 shadow-[0_10px_40px_rgba(25,28,30,0.06)] sm:p-6">
+      <div className="mb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">{subtitle}</p>
+        <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{title}</h3>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export default function Analytics({ transactions }) {
   const [expandedSection, setExpandedSection] = useState("all");
 
-  // ========== HELPER FUNCTIONS ==========
-
-  // Get month from date string (YYYY-MM-DD -> YYYY-MM)
-  const getMonth = (dateStr) => dateStr?.substring(0, 7) || "";
-
-  // Get transaction method from narration
-  const getTransactionMethod = (narration) => {
-    if (!narration) return "Other";
-    const upper = narration.toUpperCase();
-    if (upper.includes("UPI")) return "UPI";
-    if (upper.includes("IMPS")) return "IMPS";
-    if (upper.includes("IFN")) return "IFN";
-    if (upper.includes("ATM")) return "ATM";
-    if (upper.includes("NEFT")) return "NEFT";
-    if (upper.includes("RTGS")) return "RTGS";
-    if (upper.includes("CHEQUE")) return "Cheque";
-    return "Other";
-  };
-
-  // Get unique months in transactions
-  const getUniqueMonths = (txns) => {
-    const months = new Set();
-    txns.forEach((t) => {
-      if (t.Date) months.add(getMonth(t.Date));
-    });
-    return Array.from(months).sort().reverse();
-  };
-
-  // ========== CALCULATED DATA ==========
-
   const insights = useMemo(() => {
     if (transactions.length === 0) return {};
 
-    const debitTxs = transactions.filter((t) => t.Type === "Debit");
-    const creditTxs = transactions.filter((t) => t.Type === "Credit");
+    const debitTxs = transactions.filter((transaction) => transaction.Type === "Debit");
+    const creditTxs = transactions.filter((transaction) => transaction.Type === "Credit");
 
-    // Get unique months
-    const months = getUniqueMonths(transactions);
+    const totalDebit = debitTxs.reduce((sum, transaction) => sum + transaction.Amount, 0);
+    const totalCredit = creditTxs.reduce((sum, transaction) => sum + transaction.Amount, 0);
+    const savingsRate = totalCredit > 0 ? ((totalCredit - totalDebit) / totalCredit) * 100 : 0;
+
+    const months = Array.from(new Set(transactions.map((transaction) => getMonth(transaction.Date)).filter(Boolean))).sort().reverse();
     const currentMonth = months[0];
     const previousMonth = months[1];
 
-    // 1. Category Drift
-    const categoryDrift = [];
+    const categoryAverages = {};
+    debitTxs.forEach((transaction) => {
+      const category = transaction.Category || "Other";
+      if (!categoryAverages[category]) {
+        categoryAverages[category] = { sum: 0, count: 0 };
+      }
+      categoryAverages[category].sum += transaction.Amount;
+      categoryAverages[category].count += 1;
+    });
+
+    const categoryAverageValues = Object.fromEntries(
+      Object.entries(categoryAverages).map(([category, data]) => [category, data.sum / data.count]),
+    );
+
+    const unusualTransactions = debitTxs.filter((transaction) => {
+      const category = transaction.Category || "Other";
+      const average = categoryAverageValues[category] || 0;
+      return average > 0 && transaction.Amount > average * 2;
+    });
+
+    const lowBalancePeriods = transactions.filter((transaction) => transaction.Balance && transaction.Balance < 1000);
+
+    const txnsByDate = {};
+    transactions.forEach((transaction) => {
+      if (!txnsByDate[transaction.Date]) txnsByDate[transaction.Date] = [];
+      txnsByDate[transaction.Date].push(transaction);
+    });
+
+    const highFrequencyDays = Object.entries(txnsByDate)
+      .filter(([, dailyTransactions]) => dailyTransactions.length > 5)
+      .map(([date, dailyTransactions]) => ({ date, count: dailyTransactions.length }));
+
+    const merchantAmounts = {};
+    const merchantFrequency = {};
+    debitTxs.forEach((transaction) => {
+      const payee = transaction.Payee || "Unknown";
+      merchantAmounts[payee] = (merchantAmounts[payee] || 0) + transaction.Amount;
+      merchantFrequency[payee] = (merchantFrequency[payee] || 0) + 1;
+    });
+
+    const topMerchants = Object.entries(merchantAmounts)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 8);
+
+    const topFrequentMerchants = Object.entries(merchantFrequency)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    const hiddenSpending = debitTxs.filter((transaction) => transaction.Amount >= 10 && transaction.Amount <= 50);
+    const hiddenByCategory = hiddenSpending.reduce((accumulator, transaction) => {
+      const category = transaction.Category || "Other";
+      accumulator[category] = (accumulator[category] || 0) + transaction.Amount;
+      return accumulator;
+    }, {});
+
+    const expenseRatio = Object.entries(categoryAverages)
+      .map(([category, data]) => ({
+        category,
+        amount: data.sum,
+        percent: totalCredit > 0 ? (data.sum / totalCredit) * 100 : 0,
+      }))
+      .sort((a, b) => b.percent - a.percent);
+
+    const methodAmounts = debitTxs.reduce((accumulator, transaction) => {
+      const method = getTransactionMethod(transaction.Narration);
+      accumulator[method] = (accumulator[method] || 0) + transaction.Amount;
+      return accumulator;
+    }, {});
+
+    const paymentMethods = Object.entries(methodAmounts)
+      .map(([name, amount]) => ({ name, amount, percent: totalDebit > 0 ? (amount / totalDebit) * 100 : 0 }))
+      .sort((a, b) => b.percent - a.percent);
+
+    const categoryChange = [];
     if (currentMonth && previousMonth) {
-      const currentMonthTxs = debitTxs.filter((t) => getMonth(t.Date) === currentMonth);
-      const previousMonthTxs = debitTxs.filter((t) => getMonth(t.Date) === previousMonth);
+      const currentMonthSpend = {};
+      const previousMonthSpend = {};
 
-      const currentByCategory = {};
-      currentMonthTxs.forEach((t) => {
-        const cat = t.Category || "Other";
-        currentByCategory[cat] = (currentByCategory[cat] || 0) + t.Amount;
+      debitTxs.forEach((transaction) => {
+        const month = getMonth(transaction.Date);
+        const bucket = month === currentMonth ? currentMonthSpend : month === previousMonth ? previousMonthSpend : null;
+        if (!bucket) return;
+        const category = transaction.Category || "Other";
+        bucket[category] = (bucket[category] || 0) + transaction.Amount;
       });
 
-      const previousByCategory = {};
-      previousMonthTxs.forEach((t) => {
-        const cat = t.Category || "Other";
-        previousByCategory[cat] = (previousByCategory[cat] || 0) + t.Amount;
-      });
-
-      const allCategories = new Set([...Object.keys(currentByCategory), ...Object.keys(previousByCategory)]);
-      allCategories.forEach((cat) => {
-        const current = currentByCategory[cat] || 0;
-        const previous = previousByCategory[cat] || 0;
+      const allCategories = new Set([...Object.keys(currentMonthSpend), ...Object.keys(previousMonthSpend)]);
+      allCategories.forEach((category) => {
+        const previous = previousMonthSpend[category] || 0;
+        const current = currentMonthSpend[category] || 0;
         if (previous > 0) {
           const change = ((current - previous) / previous) * 100;
-          categoryDrift.push({ category: cat, current, previous, change });
+          categoryChange.push({ category, previous, current, change });
         }
       });
     }
 
-    // 2. Top Growing Category
-    const topGrowingCategory = categoryDrift.length > 0
-      ? categoryDrift.reduce((max, cat) => cat.change > max.change ? cat : max, categoryDrift[0])
+    const topGrowingCategory = categoryChange.length
+      ? categoryChange.reduce((winner, item) => (item.change > winner.change ? item : winner), categoryChange[0])
       : null;
 
-    // 3. Unusual Transactions (amount > 2x category average)
-    const categoryAverages = {};
-    debitTxs.forEach((t) => {
-      const cat = t.Category || "Other";
-      if (!categoryAverages[cat]) {
-        categoryAverages[cat] = { sum: 0, count: 0 };
-      }
-      categoryAverages[cat].sum += t.Amount;
-      categoryAverages[cat].count += 1;
-    });
-
-    const categoryAvgs = {};
-    Object.entries(categoryAverages).forEach(([cat, data]) => {
-      categoryAvgs[cat] = data.sum / data.count;
-    });
-
-    const unusualTransactions = debitTxs.filter((t) => {
-      const cat = t.Category || "Other";
-      const avg = categoryAvgs[cat] || 0;
-      return avg > 0 && t.Amount > 2 * avg;
-    });
-
-    // 4. Low Balance Warning (balance < 1000)
-    const lowBalancePeriods = [];
-    transactions.forEach((t) => {
-      if (t.Balance && t.Balance < 1000) {
-        lowBalancePeriods.push({
-          date: t.Date,
-          balance: t.Balance,
-          payee: t.Payee,
-        });
-      }
-    });
-
-    // 5. High Frequency Days (> 5 transactions per day)
-    const txnsByDate = {};
-    transactions.forEach((t) => {
-      if (!txnsByDate[t.Date]) {
-        txnsByDate[t.Date] = [];
-      }
-      txnsByDate[t.Date].push(t);
-    });
-
-    const highFrequencyDays = Object.entries(txnsByDate)
-      .filter(([_, txns]) => txns.length > 5)
-      .map(([date, txns]) => ({ date, count: txns.length, txns }));
-
-    // 6. Top Merchants by Amount
-    const merchantAmounts = {};
-    debitTxs.forEach((t) => {
-      const payee = t.Payee || "Unknown";
-      merchantAmounts[payee] = (merchantAmounts[payee] || 0) + t.Amount;
-    });
-    const topMerchants = Object.entries(merchantAmounts)
-      .map(([name, amount]) => ({ name, amount }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
-
-    // 7. Merchant Frequency
-    const merchantFrequency = {};
-    debitTxs.forEach((t) => {
-      const payee = t.Payee || "Unknown";
-      merchantFrequency[payee] = (merchantFrequency[payee] || 0) + 1;
-    });
-    const topFrequentMerchants = Object.entries(merchantFrequency)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    // 8. Hidden Spending (₹10-₹50)
-    const hiddenSpending = debitTxs.filter((t) => t.Amount >= 10 && t.Amount <= 50);
-    const hiddenByCategory = {};
-    hiddenSpending.forEach((t) => {
-      const cat = t.Category || "Other";
-      hiddenByCategory[cat] = (hiddenByCategory[cat] || 0) + t.Amount;
-    });
-    const hiddenTotal = hiddenSpending.reduce((sum, t) => sum + t.Amount, 0);
-
-    // 9. Savings Rate
-    const totalDebit = debitTxs.reduce((sum, t) => sum + t.Amount, 0);
-    const totalCredit = creditTxs.reduce((sum, t) => sum + t.Amount, 0);
-    const savingsRate = totalCredit > 0 ? ((totalCredit - totalDebit) / totalCredit) * 100 : 0;
-
-    // 10. Expense Ratio by Category
-    const expenseRatio = [];
-    if (totalCredit > 0) {
-      Object.entries(categoryAverages).forEach(([cat, data]) => {
-        const percent = (data.sum / totalCredit) * 100;
-        expenseRatio.push({ category: cat, amount: data.sum, percent });
-      });
-      expenseRatio.sort((a, b) => b.percent - a.percent);
-    }
-
-    // 11. Payment Method Percentages
-    const methodAmounts = {};
-    debitTxs.forEach((t) => {
-      const method = getTransactionMethod(t.Narration);
-      methodAmounts[method] = (methodAmounts[method] || 0) + t.Amount;
-    });
-    const paymentMethodPercentages = Object.entries(methodAmounts)
-      .map(([name, amount]) => ({ name, amount, percent: (amount / totalDebit) * 100 }))
-      .sort((a, b) => b.percent - a.percent);
-
-    // 12. ATM vs Digital
-    const atmTotal = (methodAmounts["ATM"] || 0);
-    const digitalTotal = totalDebit - atmTotal;
-
     return {
-      categoryDrift,
-      topGrowingCategory,
+      totalDebit,
+      totalCredit,
+      savingsRate,
       unusualTransactions,
       lowBalancePeriods,
       highFrequencyDays,
@@ -214,418 +214,343 @@ export default function Analytics({ transactions }) {
       topFrequentMerchants,
       hiddenSpending,
       hiddenByCategory,
-      hiddenTotal,
-      savingsRate,
       expenseRatio,
-      paymentMethodPercentages,
-      atmVsDigital: { atmTotal, digitalTotal },
+      paymentMethods,
+      categoryChange,
+      topGrowingCategory,
       months,
       currentMonth,
       previousMonth,
     };
   }, [transactions]);
 
-  // Chart data
   const categoryData = useMemo(() => {
     const grouped = {};
-    transactions
-      .filter((t) => t.Type === "Debit")
-      .forEach((t) => {
-        const cat = t.Category || "Other";
-        grouped[cat] = (grouped[cat] || 0) + t.Amount;
-      });
+    transactions.filter((transaction) => transaction.Type === "Debit").forEach((transaction) => {
+      const category = transaction.Category || "Other";
+      grouped[category] = (grouped[category] || 0) + transaction.Amount;
+    });
+
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+      .slice(0, 8);
   }, [transactions]);
 
   const dateData = useMemo(() => {
     const grouped = {};
-    transactions.forEach((t) => {
-      grouped[t.Date] = (grouped[t.Date] || 0) + 1;
+    transactions.forEach((transaction) => {
+      grouped[transaction.Date] = (grouped[transaction.Date] || 0) + 1;
     });
+
     return Object.entries(grouped)
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [transactions]);
 
-  const debitCreditData = useMemo(() => {
-    let debit = 0;
-    let credit = 0;
-    transactions.forEach((t) => {
-      if (t.Type === "Debit") debit += t.Amount;
-      if (t.Type === "Credit") credit += t.Amount;
-    });
-    return [
-      { name: "Debit", value: debit },
-      { name: "Credit", value: credit },
-    ];
-  }, [transactions]);
+  const debitCreditData = useMemo(() => ([
+    { name: "Debit", value: insights.totalDebit || 0 },
+    { name: "Credit", value: insights.totalCredit || 0 },
+  ]), [insights.totalDebit, insights.totalCredit]);
 
-  const totalDebit = debitCreditData[0].value;
-  const totalCredit = debitCreditData[1].value;
+  const totalDebit = insights.totalDebit || 0;
+  const totalCredit = insights.totalCredit || 0;
   const netBalance = totalCredit - totalDebit;
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-        <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="rounded-[1.5rem] border border-slate-200/70 bg-white p-12 text-center shadow-[0_10px_40px_rgba(25,28,30,0.06)]">
+        <svg className="mx-auto mb-4 h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
-        <p className="text-gray-400 text-sm">No transactions available for analytics</p>
-        <p className="text-gray-300 text-xs mt-1">Upload a valid bank statement to view insights</p>
+        <p className="text-sm text-slate-500">No transactions available for analytics</p>
+        <p className="mt-1 text-xs text-slate-400">Upload a valid bank statement to view insights</p>
       </div>
     );
   }
 
   const Section = ({ title, icon, children, id }) => {
     const isExpanded = expandedSection === "all" || expandedSection === id;
+
     return (
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white shadow-[0_10px_40px_rgba(25,28,30,0.06)]">
         <button
           onClick={() => setExpandedSection(isExpanded ? "none" : id)}
-          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-xl">{icon}</span>
-            <h3 className="text-md font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-md font-semibold text-slate-900">{title}</h3>
           </div>
-          <span className="text-gray-400">{isExpanded ? "▼" : "▶"}</span>
+          <span className="text-slate-400">{isExpanded ? "▼" : "▶"}</span>
         </button>
-        {isExpanded && <div className="px-6 pb-6">{children}</div>}
+        {isExpanded ? <div className="px-6 pb-6">{children}</div> : null}
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      {/* Expand/Collapse All */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setExpandedSection("all")}
-          className="text-sm text-blue-600 hover:text-blue-700"
-        >
-          Expand All
-        </button>
-        <span className="text-gray-300">|</span>
-        <button
-          onClick={() => setExpandedSection("none")}
-          className="text-sm text-blue-600 hover:text-blue-700"
-        >
-          Collapse All
-        </button>
+      <div className="rounded-[1.5rem] border border-slate-200/70 bg-gradient-to-br from-white to-slate-50 p-6 shadow-[0_10px_40px_rgba(25,28,30,0.06)] sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Pattubook Analytics</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A calm financial dashboard with clear spending signals.</h2>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              The layout favors soft contrast, rounded surfaces, and quick scanning so transaction patterns feel readable on every screen size.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setExpandedSection("all")} className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800">Expand all</button>
+            <button onClick={() => setExpandedSection("none")} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">Collapse all</button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Total Debit" value={formatAmount(totalDebit)} detail="Money spent in the selected statement" tone="rose" />
+          <MetricCard label="Total Credit" value={formatAmount(totalCredit)} detail="Money received in the selected statement" tone="green" />
+          <MetricCard label="Net Balance" value={formatAmount(netBalance)} detail={netBalance >= 0 ? "Credits outweigh debits" : "Debits exceed credits"} tone="indigo" />
+          <MetricCard label="Savings Rate" value={`${insights.savingsRate?.toFixed(1) || "0.0"}%`} detail={insights.savingsRate >= 0 ? "Healthy cash flow" : "Spending above income"} tone={insights.savingsRate >= 0 ? "green" : "rose"} />
+        </div>
       </div>
 
-      {/* Financial Overview */}
-      <Section title="Financial Overview" icon="💰" id="overview">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-red-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Total Debit</p>
-            <p className="text-2xl font-bold text-red-600">₹{totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Total Credit</p>
-            <p className="text-2xl font-bold text-green-600">₹{totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Net Balance</p>
-            <p className={`text-2xl font-bold ${netBalance >= 0 ? "text-blue-600" : "text-red-600"}`}>
-              ₹{netBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      {/* Smart Category Insights */}
-      <Section title="Smart Category Insights" icon="📊" id="insights">
-        {insights.topGrowingCategory ? (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-blue-800">
-              <span className="font-semibold">Top Growing Category:</span>{" "}
-              {insights.topGrowingCategory.category} spending{" "}
-              {insights.topGrowingCategory.change > 0 ? "increased" : "decreased"} by{" "}
-              <span className={insights.topGrowingCategory.change > 0 ? "text-red-600" : "text-green-600"}>
-                {Math.abs(insights.topGrowingCategory.change).toFixed(1)}%
-              </span>{" "}
-              this month
-              ({insights.previousMonth} → {insights.currentMonth})
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 mb-4">Need at least 2 months of data for category insights</p>
-        )}
-
-        {insights.categoryDrift.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-700">Month-over-Month Category Changes</h4>
-            {insights.categoryDrift.slice(0, 5).map((cat) => (
-              <div key={cat.category} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700">{cat.category}</span>
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-500">₹{cat.previous.toFixed(0)} → ₹{cat.current.toFixed(0)}</span>
-                  <span className={cat.change > 0 ? "text-red-600" : "text-green-600"}>
-                    {cat.change > 0 ? "+" : ""}{cat.change.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {/* Risk & Alert System */}
-      <Section title="Risk & Alerts" icon="⚠️" id="alerts">
-        <div className="space-y-4">
-          {/* Unusual Transactions */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Unusual Transactions (Amount &gt; 2x Category Average)</h4>
-            {insights.unusualTransactions?.length > 0 ? (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {insights.unusualTransactions.slice(0, 10).map((t, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-                    <div>
-                      <p className="font-medium text-gray-900">{t.Payee}</p>
-                      <p className="text-gray-500">{t.Date} • {t.Category}</p>
-                    </div>
-                    <p className="font-semibold text-red-600">₹{t.Amount.toFixed(2)}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-green-600">✓ No unusual transactions detected</p>
-            )}
-          </div>
-
-          {/* Low Balance Warning */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Low Balance Periods (Balance &lt; ₹1,000)</h4>
-            {insights.lowBalancePeriods?.length > 0 ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
-                <p className="text-red-800">
-                  Found {insights.lowBalancePeriods.length} instances where balance dropped below ₹1,000
-                </p>
-                <p className="text-gray-600 mt-1">Lowest balance: ₹{Math.min(...insights.lowBalancePeriods.map(b => b.balance)).toFixed(2)}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-green-600">✓ Balance never dropped below ₹1,000</p>
-            )}
-          </div>
-
-          {/* High Frequency Spending */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">High Frequency Days (&gt;5 transactions)</h4>
-            {insights.highFrequencyDays?.length > 0 ? (
-              <div className="space-y-2">
-                {insights.highFrequencyDays.map((day) => (
-                  <div key={day.date} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
-                    <span className="text-gray-700">{day.date}</span>
-                    <span className="font-semibold text-orange-600">{day.count} transactions</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-green-600">✓ No high-frequency spending days detected</p>
-            )}
-          </div>
-        </div>
-      </Section>
-
-      {/* Payment Method Intelligence */}
-      <Section title="Payment Method Intelligence" icon="💳" id="payment">
-        <div className="grid grid-cols-2 gap-6">
-          {/* ATM vs Digital */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">ATM vs Digital Spending</h4>
-            <div className="space-y-3">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">ATM Withdrawals</p>
-                <p className="text-xl font-bold text-gray-900">₹{insights.atmVsDigital?.atmTotal?.toFixed(2) || "0"}</p>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Digital Payments</p>
-                <p className="text-xl font-bold text-blue-600">₹{insights.atmVsDigital?.digitalTotal?.toFixed(2) || "0"}</p>
-              </div>
-              {insights.atmVsDigital?.atmTotal > 0 && (
-                <p className="text-xs text-gray-500">
-                  Digital transactions: {((insights.atmVsDigital.digitalTotal / totalDebit) * 100).toFixed(1)}% of total spending
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Payment Method Percentages */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Preferred Payment Methods</h4>
-            <div className="space-y-2">
-              {insights.paymentMethodPercentages?.slice(0, 5).map((method) => (
-                <div key={method.name} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">{method.name}</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${method.percent}%` }}
-                      />
-                    </div>
-                    <span className="text-gray-600 w-12 text-right">{method.percent.toFixed(1)}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* Merchant Intelligence */}
-      <Section title="Merchant Intelligence" icon="🏪" id="merchants">
-        <div className="grid grid-cols-2 gap-6">
-          {/* Top Merchants by Amount */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Top Merchants by Amount</h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {insights.topMerchants?.map((merchant, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700 truncate">{merchant.name}</span>
-                  <span className="text-gray-900 font-medium">₹{merchant.amount.toFixed(0)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Merchant Frequency */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Most Frequently Used Merchants</h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {insights.topFrequentMerchants?.map((merchant, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700 truncate">{merchant.name}</span>
-                  <span className="text-gray-900 font-medium">{merchant.count} times</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Hidden Spending */}
-        <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-purple-800 mb-2">Hidden Spending (₹10-₹50 small purchases)</h4>
-          <p className="text-2xl font-bold text-purple-900 mb-2">
-            ₹{insights.hiddenTotal?.toFixed(2) || "0"}
-          </p>
-          {Object.entries(insights.hiddenByCategory || {}).length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {Object.entries(insights.hiddenByCategory).map(([cat, amount]) => (
-                <span key={cat} className="text-xs bg-white px-2 py-1 rounded-full text-purple-800">
-                  {cat}: ₹{amount.toFixed(0)}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </Section>
-
-      {/* Savings & Efficiency */}
-      <Section title="Savings & Efficiency" icon="📈" id="savings">
-        <div className="grid grid-cols-2 gap-6">
-          {/* Savings Rate */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Savings Rate</h4>
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 text-center">
-              <p className={`text-4xl font-bold ${insights.savingsRate >= 0 ? "text-green-600" : "text-red-600"}`}>
-                {insights.savingsRate?.toFixed(1) || "0"}%
-              </p>
-              <p className="text-sm text-gray-600 mt-2">
-                {insights.savingsRate >= 0 ? "You're saving money!" : "Spending exceeds income"}
-              </p>
-            </div>
-          </div>
-
-          {/* Expense Ratio */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Expense Ratio by Category</h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {insights.expenseRatio?.slice(0, 6).map((cat) => (
-                <div key={cat.category} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">{cat.category}</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-red-500 h-2 rounded-full"
-                        style={{ width: `${Math.min(cat.percent, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-gray-600 w-12 text-right">{cat.percent.toFixed(1)}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* Visual Charts */}
-      <Section title="Visual Charts" icon="📉" id="charts">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Spending by Category */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-4">Spending by Category</h4>
-            <ResponsiveContainer width="100%" height={250}>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <SectionCard title="Spending by Category" subtitle="Charts">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  outerRadius={95}
+                  innerRadius={45}
+                  paddingAngle={4}
                   dataKey="value"
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`category-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Debit vs Credit */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-4">Debit vs Credit</h4>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={debitCreditData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  <Cell fill="#ef4444" />
-                  <Cell fill="#10b981" />
-                </Pie>
-                <Tooltip formatter={(value) => `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
+                <Tooltip formatter={(value) => formatAmount(value)} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Transactions by Date */}
-        <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-4">Transactions by Date</h4>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={dateData.slice(-14)}>
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" />
-            </BarChart>
+        <SectionCard title="Debit vs Credit" subtitle="Charts">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={debitCreditData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={6} dataKey="value">
+                  <Cell fill="#ef4444" />
+                  <Cell fill="#10b981" />
+                </Pie>
+                <Tooltip formatter={(value) => formatAmount(value)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Transactions Over Time" subtitle="Charts">
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dateData.slice(-14)}>
+              <XAxis dataKey="date" tickFormatter={formatShortDate} tick={{ fontSize: 12, fill: "#6b7280" }} />
+              <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
+              <Tooltip labelFormatter={(label) => label} />
+              <Line type="monotone" dataKey="count" stroke="#15196c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+            </LineChart>
           </ResponsiveContainer>
+        </div>
+      </SectionCard>
+
+      <Section title="Smart Category Insights" icon="📊" id="insights">
+        {insights.topGrowingCategory ? (
+          <div className="mb-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+            <p className="text-sm text-indigo-900">
+              <span className="font-semibold">Top Growing Category:</span> {insights.topGrowingCategory.category} spending {insights.topGrowingCategory.change > 0 ? "increased" : "decreased"} by{" "}
+              <span className={insights.topGrowingCategory.change > 0 ? "font-semibold text-rose-700" : "font-semibold text-emerald-700"}>
+                {Math.abs(insights.topGrowingCategory.change).toFixed(1)}%
+              </span>{" "}
+              ({insights.previousMonth} → {insights.currentMonth})
+            </p>
+          </div>
+        ) : (
+          <p className="mb-5 text-sm text-slate-500">Need at least 2 months of data for category drift analysis.</p>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {insights.categoryChange.slice(0, 6).map((item) => (
+            <div key={item.category} className="rounded-2xl bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-slate-900">{item.category}</span>
+                <span className={`text-sm font-semibold ${item.change >= 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                  {item.change >= 0 ? "+" : ""}{item.change.toFixed(1)}%
+                </span>
+              </div>
+              <div className="mt-2 text-xs text-slate-500">{formatAmount(item.previous)} → {formatAmount(item.current)}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Section title="Risk & Alerts" icon="⚠️" id="alerts">
+          <div className="space-y-5">
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">Unusual Transactions</h4>
+              {insights.unusualTransactions.length ? (
+                <div className="space-y-2">
+                  {insights.unusualTransactions.slice(0, 6).map((transaction, index) => (
+                    <div key={`${transaction.Payee}-${index}`} className="flex items-start justify-between rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm">
+                      <div>
+                        <p className="font-medium text-slate-900">{transaction.Payee}</p>
+                        <p className="text-slate-500">{transaction.Date} • {transaction.Category}</p>
+                      </div>
+                      <span className="font-semibold text-amber-900">{formatAmount(transaction.Amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-emerald-700">No unusual transactions detected.</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">Low Balance Periods</h4>
+              {insights.lowBalancePeriods.length ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                  Found {insights.lowBalancePeriods.length} instances where the balance dropped below ₹1,000.
+                </div>
+              ) : (
+                <p className="text-sm text-emerald-700">Balance never dropped below ₹1,000.</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">High Frequency Days</h4>
+              {insights.highFrequencyDays.length ? (
+                <div className="space-y-2">
+                  {insights.highFrequencyDays.slice(0, 5).map((day) => (
+                    <div key={day.date} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+                      <span className="text-slate-700">{day.date}</span>
+                      <span className="font-semibold text-slate-900">{day.count} transactions</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-emerald-700">No high-frequency spending days detected.</p>
+              )}
+            </div>
+          </div>
+        </Section>
+
+        <Section title="Merchant Intelligence" icon="🏪" id="merchants">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">Top Merchants by Amount</h4>
+              <div className="space-y-2">
+                {insights.topMerchants.map((merchant) => (
+                  <div key={merchant.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+                    <span className="truncate text-slate-700">{merchant.name}</span>
+                    <span className="font-semibold text-slate-900">{formatAmount(merchant.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="mb-3 text-sm font-semibold text-slate-900">Frequent Merchants</h4>
+              <div className="space-y-2">
+                {insights.topFrequentMerchants.map((merchant) => (
+                  <div key={merchant.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+                    <span className="truncate text-slate-700">{merchant.name}</span>
+                    <span className="font-semibold text-slate-900">{merchant.count} times</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+            <h4 className="text-sm font-semibold text-indigo-900">Hidden Spending</h4>
+            <p className="mt-2 text-2xl font-semibold text-indigo-900">{formatAmount(insights.hiddenSpending.reduce((sum, item) => sum + item.Amount, 0))}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Object.entries(insights.hiddenByCategory).map(([category, amount]) => (
+                <span key={category} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-indigo-900">
+                  {category}: ₹{amount.toFixed(0)}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Section>
+      </div>
+
+      <Section title="Payment Method Intelligence" icon="💳" id="payment">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">ATM vs Digital</h4>
+            <div className="space-y-3">
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <p className="text-sm text-slate-500">ATM Withdrawals</p>
+                <p className="mt-1 text-xl font-semibold text-slate-900">{formatAmount((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount)}</p>
+              </div>
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <p className="text-sm text-slate-500">Digital Payments</p>
+                <p className="mt-1 text-xl font-semibold text-indigo-700">{formatAmount(totalDebit - ((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount || 0))}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">Preferred Payment Methods</h4>
+            <div className="space-y-3">
+              {insights.paymentMethods.slice(0, 6).map((method) => (
+                <div key={method.name}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="text-slate-700">{method.name}</span>
+                    <span className="text-slate-500">{method.percent.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${Math.min(method.percent, 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Savings & Efficiency" icon="📈" id="savings">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white p-6 text-center">
+            <p className={`text-4xl font-semibold ${insights.savingsRate >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              {insights.savingsRate.toFixed(1)}%
+            </p>
+            <p className="mt-2 text-sm text-slate-600">{insights.savingsRate >= 0 ? "You're saving money." : "Spending exceeds income."}</p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <h4 className="mb-3 text-sm font-semibold text-slate-900">Expense Ratio by Category</h4>
+            <div className="space-y-3">
+              {insights.expenseRatio.slice(0, 6).map((item) => (
+                <div key={item.category}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="text-slate-700">{item.category}</span>
+                    <span className="text-slate-500">{item.percent.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div className="h-2 rounded-full bg-rose-500" style={{ width: `${Math.min(item.percent, 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </Section>
     </div>
