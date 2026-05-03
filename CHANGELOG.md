@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SBI parser** - New parser for SBI bank statements with support for:
+  - Table-based extraction (primary) with flexible column positioning
+  - Text-based parsing as fallback for borderless tables
+  - UPI transactions (UPI/CR for credit, UPI/DR for debit)
+  - Date format: DD/MM/YYYY
+  - Transaction type detection via separate debit/credit columns or UPI markers
+  - Balance-based type detection as fallback
+  - Multi-line narration handling with continuation line merging
+- **React Router** - Added client-side routing with separate pages:
+  - `/` - Home page with upload, transaction view, and filters
+  - `/about` - About page with application information
+  - `/analytics` - Dedicated analytics page
+  - Navigation highlights active route automatically
+- **Dynamic Bank Dropdown** - Bank selector now fetches available banks from `/api/banks` API endpoint instead of hardcoded list
 - **Advanced Analytics Dashboard** - Comprehensive financial insights with:
   - **Smart Category Insights**: Category drift detection (month-over-month spending changes), Top growing category highlight
   - **Risk & Alert System**: Unusual transaction detection (amount > 2x category average), Low balance warnings (< ₹1,000), High frequency spending alerts (>5 transactions/day)
@@ -27,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - IFN wallet categories: Food, Fuel, Shopping, Medical, Transfer
 
 ### Fixed
+- **Self-transfer detection logic** - Removed flawed name-based self-transfer detection (checked for "ATHUL" in payee name). TODO added for implementing proper self-transfer detection using account numbers, IFSC codes, or transaction patterns in a future stage
 - **Date parsing in Canara Bank statements** - Updated `DATE_TIME_REGEX` to support both slash (`/`) and hyphen (`-`) date separators, fixing datetime extraction for Canara e-passbook PDFs that use `DD-MM-YYYY` format
 - **Double normalization in Canara parser** - Removed redundant text normalization when determining transaction type; now uses `get_type()` from `payee_extractor.py` directly
 - **Datetime tuple extraction** - Enhanced `extract_datetime_tuple()` to try multiple date format combinations (`DD/MM/YYYY`, `DD/MM/YY`, `DD-MM-YYYY`, `DD-MM-YY`)

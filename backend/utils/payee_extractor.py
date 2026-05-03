@@ -388,13 +388,10 @@ def detect_flags(text, payee, user_name=None):
     flags = []
     if "MANDATE" in text:
         flags.append("Subscription")
-    if user_name and user_name.upper() in payee.upper():
-        flags.append("Self Transfer")
+    # TODO: Implement proper self-transfer detection in future stage
+    # Self-transfer should be detected by checking account numbers, IFSC codes,
+    # or transaction patterns, not by name matching
     return flags
-
-
-def is_self_transfer(payee, account_holder="ATHUL"):
-    return account_holder in payee.upper()
 
 
 def is_mandate(text):

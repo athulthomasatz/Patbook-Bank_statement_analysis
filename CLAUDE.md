@@ -12,16 +12,18 @@ Bank Statement Analyzer - A web application for parsing, analyzing, and exportin
 - **Entry point**: `backend/main.py` - FastAPI app with CORS enabled for localhost:5173 and localhost:3000
 - **PDF Loading**: `backend/utils/pdf_loader.py` - Handles PDF decryption using pikepdf, returns pdfplumber object
 - **Parser Registry**: `backend/parsers/__init__.py` - Maps bank names to parser functions (PARSERS dict)
-- **Parser Functions**: Each bank parser (`canara.py`, `hdfc.py`, `union.py`) returns a pandas DataFrame with columns: Date, Payee, Category, Type, Amount, Balance, Bank, Narration
+- **Parser Functions**: Each bank parser (`canara.py`, `hdfc.py`, `union.py`, `federal.py`, `sbi.py`) returns a pandas DataFrame with columns: Date, Payee, Category, Type, Amount, Balance, Bank, Narration
 - **Payee Extraction**: `backend/utils/payee_extractor.py` - Extracts payee names and transaction categories from narration text using regex patterns and merchant mappings
 
 ### Frontend (React/Vite)
 - **Entry point**: `frontend/src/main.jsx` - React app entry
 - **API Client**: `frontend/src/api.js` - Functions: getBanks(), parseStatement(), downloadCSV()
 - **Components**: Upload, Summary, Filters, Table, DebugLogs, ExportDialog, Analytics
+- **Pages**: Home (upload, transaction view), About (application info), Analytics (dedicated analytics page)
 - **State Management**: Uses React useState for transactions, filters, and editable transaction fields
 - **Chart Library**: Uses Recharts for visual analytics (pie charts, bar charts)
-- **Navigation**: Tab-based navigation to switch between Transactions and Analytics views
+- **Routing**: React Router for client-side navigation with `/`, `/about`, `/analytics` routes
+- **Dynamic Bank Selection**: Bank dropdown fetches available banks from `/api/banks` API endpoint
 
 ## Common Commands
 
@@ -44,24 +46,41 @@ npm run dev
 
 Frontend runs on http://localhost:5173.
 
+## Frontend Routing
+
+The application uses React Router for client-side navigation:
+
+### Routes
+- `/` - Home page: Upload PDF, view transactions, apply filters, edit transactions
+- `/about` - About page: Application information and features
+- `/analytics` - Dedicated analytics page with comprehensive financial insights
+
+### Navigation Component
+The header includes a navigation bar that highlights the active route automatically. Clicking navigation items switches between pages without full page reloads.
+
+### State Sharing
+Transaction data is lifted to the App component level and shared between pages via props, allowing the analytics page to access data uploaded on the home page.
+
 ## Adding a New Bank Parser
 
-1. Create a new file in `backend/parsers/` (e.g., `sbi.py`)
+1. Create a new file in `backend/parsers/` (e.g., `axis.py`)
 2. Implement a `parse(pdf)` function that accepts a pdfplumber PDF object and returns a pandas DataFrame with columns: Date, Payee, Category, Type, Amount, Balance, Bank, Narration
 3. Add the parser to `backend/parsers/__init__.py` in the PARSERS dict:
 
 ```python
-from parsers.sbi import parse as parse_sbi
+from parsers.axis import parse as parse_axis
 
 PARSERS = {
     "HDFC": parse_hdfc,
     "Canara": parse_canara,
     "Union Bank": parse_union,
-    "SBI": parse_sbi,  # Add your bank here
+    "Federal Bank": parse_federal,
+    "SBI": parse_sbi,
+    "Axis": parse_axis,  # Add your bank here
 }
 ```
 
-4. The bank name will automatically appear in the frontend bank dropdown via the `/api/banks` endpoint
+4. The bank name will automatically appear in the frontend bank dropdown via the `/api/banks` endpoint (no frontend changes needed)
 
 ## Parser Implementation Notes
 
@@ -86,6 +105,8 @@ The `payee_extractor.py` module handles:
 - Extracting payee name and category from narration
 - Merchant name mappings for known merchants (see MERCHANT_MAPPINGS dict)
 - UPI transaction parsing (format: `UPI/CR|DR/REFNO/NAME/BANK/...`)
+
+**Note**: Self-transfer detection has been removed (previously used name-based detection which was unreliable). Proper self-transfer detection using account numbers, IFSC codes, or transaction patterns is planned for a future stage.
 
 Add new merchant mappings to `MERCHANT_MAPPINGS` to improve categorization.
 
