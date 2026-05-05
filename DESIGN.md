@@ -164,3 +164,104 @@ Charts should avoid sharp angles. Line charts must use smooth bezier curves. Bar
 
 ### Chips & Tags
 Chips are used for category filtering and status indicators. These should be pill-shaped and use low-saturation versions of the brand colors (e.g., a pale lime background with dark lime text) to keep the UI clean and readable.
+
+## Application Architecture
+
+### Technology Stack
+- **Frontend**: React 19 with Vite, React Router for navigation, Recharts for analytics
+- **Backend**: Python FastAPI with pdfplumber for PDF parsing
+- **State Management**: React useState with lifted state for cross-page data sharing
+
+### Routing Structure
+The application uses client-side routing with three main pages:
+
+1. **Home (`/`)**
+   - Primary workspace for statement processing
+   - Upload component with dynamic bank selection
+   - Transaction view with editable fields
+   - Filters (type, category, search)
+   - Inline analytics toggle
+   - Debug logs for troubleshooting
+
+2. **About (`/about`)**
+   - Brand showcase page
+   - Feature highlights
+   - Call-to-action buttons
+   - Preview imagery
+
+3. **Analytics (`/analytics`)**
+   - Dedicated analytics dashboard
+   - Comprehensive financial insights
+   - Visual charts and metrics
+   - Category breakdowns and patterns
+
+### Navigation
+- **Desktop**: Horizontal navigation bar with active route highlighting
+- **Mobile**: Hamburger menu with vertical list
+- Active routes use Primary Indigo background with white text
+- Hover states include subtle scale transformation
+- Smooth transitions between states
+
+### Page Transitions
+All pages use a `PageTransition` wrapper component for consistent entrance animations, creating a smooth, polished feel when navigating between sections.
+
+## Component Architecture
+
+### Core Components
+- **Upload**: File upload with bank selection, password support, and status feedback
+- **Summary**: Financial overview cards (total debit, credit, net balance)
+- **Filters**: Type, category, and search controls with export dialog trigger
+- **Table**: Editable transaction grid with inline editing support
+- **DebugLogs**: Collapsible log viewer for parsing troubleshooting
+- **ExportDialog**: CSV export with notes inclusion option
+- **Analytics**: Comprehensive charts and insights dashboard
+- **Footer**: Brand footer with navigation and links
+
+### Page Components
+- **Home**: Main application page with upload, transactions, and analytics
+- **About**: Marketing/informational page
+- **AnalyticsPage**: Dedicated analytics view (shares data with Home via props)
+
+### State Management Strategy
+Transaction data is lifted to the App component level and passed down via props to pages that need it. This allows:
+- Data uploaded on Home page to be available on Analytics page
+- Single source of truth for transaction data
+- Clean separation of concerns
+
+## Backend Architecture
+
+### Parser System
+Modular parser architecture with bank-specific implementations:
+
+- **Canara Bank**: Table extraction with text fallback, supports DD-MM-YYYY dates
+- **HDFC Bank**: Text-based parsing, supports DD/MM/YY dates
+- **Union Bank**: UPI/IMPS transactions with merchant mappings
+- **Federal Bank**: Table extraction, UPI/IFN/IMPS support, wallet categorization
+- **SBI**: Table/text extraction, UPI/CR|DR detection, DD/MM/YYYY dates
+
+### API Endpoints
+- `GET /api/banks` - Returns list of supported banks
+- `POST /api/parse` - Parses uploaded PDF statement
+- **Payee Extraction**: Normalized text processing with merchant mappings
+- **Transaction Categorization**: UPI, IMPS, IFN, ATM, NEFT, RTGS, Cheque, Other
+
+## Supported Banks
+The system dynamically fetches available banks from the backend, allowing new parsers to be added without frontend changes. Currently supports:
+- HDFC
+- Canara
+- Union Bank
+- Federal Bank
+- SBI
+
+## Responsive Design
+- **Mobile First**: Design starts at mobile breakpoint (640px)
+- **Grid System**: Fluid grid that adapts from single column (mobile) to multi-column (desktop)
+- **Touch Targets**: Minimum 44px for interactive elements
+- **Safe Areas**: 20px side margins on mobile for thumb zone
+
+## Accessibility
+- **Focus States**: Clear 2px Indigo ring on focused elements
+- **Color Contrast**: WCAG AA compliant ratios
+- **Semantic HTML**: Proper heading hierarchy and landmarks
+- **Keyboard Navigation**: Full keyboard support for all interactive elements
+- **Screen Reader**: ARIA labels where needed

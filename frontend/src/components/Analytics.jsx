@@ -294,7 +294,7 @@ export default function Analytics({ transactions }) {
       <div className="rounded-[1.5rem] border border-slate-200/70 bg-gradient-to-br from-white to-slate-50 p-6 shadow-[0_10px_40px_rgba(25,28,30,0.06)] sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Pattubook Analytics</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Patbook Analytics</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A calm financial dashboard with clear spending signals.</h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
               The layout favors soft contrast, rounded surfaces, and quick scanning so transaction patterns feel readable on every screen size.

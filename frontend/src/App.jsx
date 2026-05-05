@@ -8,7 +8,7 @@ import Footer from "./components/Footer";
 const navLinks = [
   { label: "Home", path: "/" },
   { label: "About", path: "/about" },
-  { label: "Pattubook Analytics", path: "/analytics" },
+  { label: "Patbook Analytics", path: "/analytics" },
 ];
 
 function Navigation({ mobile = false, onLinkClick = () => {} }) {
@@ -46,7 +46,7 @@ export default function App() {
             <div className="flex items-center justify-between gap-4 mb-3">
               <div>
                 <Link to="/" className="text-2xl font-semibold tracking-tight text-slate-900">
-                  Pattubook
+                  Patbook
                 </Link>
                 <p className="text-sm text-slate-500">A calm, responsive way to read bank statements.</p>
               </div>

@@ -130,7 +130,7 @@ export default function Home({ transactions, setTransactions }) {
           <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)] sm:p-8">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Eye-friendly finance</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A simple, responsive dashboard for Pattubook.</h1>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A simple, responsive dashboard for Patbook.</h1>
               <p className="mt-4 text-base leading-7 text-slate-600">
                 The layout keeps the important actions visible, uses soft contrast, and adapts cleanly to smaller screens so the statement workflow stays easy to scan.
               </p>
