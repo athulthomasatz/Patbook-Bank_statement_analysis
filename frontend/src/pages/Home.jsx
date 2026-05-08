@@ -86,147 +86,164 @@ export default function Home({ transactions, setTransactions }) {
 
   return (
     <PageTransition>
-      <div className="space-y-8">
-      {/* Global Loading Overlay */}
-      {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 backdrop-blur-sm">
-          <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border border-white/60 bg-white p-8 shadow-[0_24px_80px_rgba(25,28,30,0.18)]">
-            <svg className="h-12 w-12 animate-spin text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="font-medium text-slate-800">Processing your statement...</p>
-            <p className="text-sm text-slate-500">This may take a few moments</p>
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-          <div className="mb-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Start here</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Upload a statement and keep the view uncluttered.</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">A clean flow for reviewing transactions, checking analytics, and exporting data without visual noise.</p>
-          </div>
-
-          <Upload
-            onResult={(r) => {
-              setTransactions(r.transactions);
-              setLogs(r.logs);
-              setSummary(r.summary);
-              setTypeFilter("All");
-              setCategory("All");
-              setSearch("");
-              setView("transactions");
-            }}
-            loading={loading}
-            setLoading={setLoading}
-          />
-
-          {logs && <DebugLogs logs={logs} />}
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)] sm:p-8">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Eye-friendly finance</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A simple, responsive dashboard for Patbook.</h1>
-              <p className="mt-4 text-base leading-7 text-slate-600">
-                The layout keeps the important actions visible, uses soft contrast, and adapts cleanly to smaller screens so the statement workflow stays easy to scan.
-              </p>
+      <div className="space-y-12">
+        {/* Global Loading Overlay */}
+        {loading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-color)]/60 px-4 backdrop-blur-sm">
+            <div className="glass-card flex w-full max-w-sm flex-col items-center gap-4 p-8">
+              <svg className="h-12 w-12 animate-spin text-[var(--primary-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="font-medium text-[var(--text-main)]">Processing your statement...</p>
+              <p className="text-sm text-[var(--text-muted)]">This may take a few moments</p>
             </div>
+          </div>
+        )}
 
-            {txns && txns.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2 rounded-2xl bg-slate-50 p-2">
-                <button
-                  onClick={() => setView("transactions")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    view === "transactions"
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-white hover:text-slate-900"
-                  }`}
-                >
-                  Transactions
-                </button>
-                <button
-                  onClick={() => setView("analytics")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    view === "analytics"
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-white hover:text-slate-900"
-                  }`}
-                >
-                  Analytics
-                </button>
-              </div>
-            )}
+        {/* Hero & Upload Section - Redesigned Split Layout */}
+        <section className="grid lg:grid-cols-2 gap-12 items-center pt-4 pb-12">
+          <div className="text-left animate-[slideInLeft_0.6s_ease-out]">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary-accent)] mb-4">Financial Intelligence</p>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-[var(--text-main)] mb-6 leading-[1.1]">
+              Bank Statements,<br />
+              <span className="text-[var(--primary-accent)] opacity-90">Beautifully</span> Analyzed.
+            </h1>
+            <p className="text-lg md:text-xl text-[var(--text-muted)] mb-10 leading-relaxed max-w-lg">
+              A stunning, secure, and intuitive way to extract insights from your PDF bank statements. Simply upload to unlock detailed analytics and easy categorization.
+            </p>
+            <div className="flex items-center gap-4 text-sm font-medium text-[var(--text-muted)]">
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                Privacy Focused
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                Instant Results
+              </span>
+            </div>
           </div>
 
-          {txns ? (
-            <div className="space-y-6">
-              {txns.length === 0 && (
-                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6 shadow-[0_12px_40px_rgba(25,28,30,0.06)]">
-                  <div className="flex items-start gap-3">
-                    <svg className="h-6 w-6 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative animate-[slideInRight_0.6s_ease-out]">
+            {/* Ambient background glow */}
+            <div className="absolute -inset-4 bg-[var(--primary-accent)]/5 rounded-[3rem] blur-3xl pointer-events-none"></div>
+            
+            <div className="glass-card p-6 md:p-10 relative">
+              <Upload
+                onResult={(r) => {
+                  setTransactions(r.transactions);
+                  setLogs(r.logs);
+                  setSummary(r.summary);
+                  setTypeFilter("All");
+                  setCategory("All");
+                  setSearch("");
+                  setView("transactions");
+                }}
+                loading={loading}
+                setLoading={setLoading}
+              />
+              {logs && <div className="mt-8 pt-6 border-t border-[var(--border-color)]"><DebugLogs logs={logs} /></div>}
+            </div>
+          </div>
+        </section>
+
+        {/* Data Section - Redesigned Dashboard Layout */}
+        {txns && (
+          <section className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
+            {txns.length === 0 ? (
+              <div className="glass-card p-8 border-amber-200/50 bg-amber-50/5">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-amber-500/10 rounded-lg">
+                    <svg className="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <div>
-                      <h3 className="text-sm font-semibold text-amber-900">No transactions found</h3>
-                      <p className="mt-1 text-sm text-amber-800">Possible bank mismatch. Please verify you selected the correct bank for this statement.</p>
-                      <p className="mt-2 text-xs text-amber-700">Check the Debug Logs below for more details about the parsing attempt.</p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-700 dark:text-amber-400">No transactions found</h3>
+                    <p className="mt-1 text-sm text-[var(--text-muted)] leading-relaxed">Possible bank mismatch. Please verify you selected the correct bank for this statement.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="glass-card p-6 md:p-10">
+                {/* Dashboard Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 pb-8 border-b border-[var(--border-color)]">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)]">Financial Analysis</h2>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">Real-time breakdown of your processed statement</p>
+                  </div>
+                  
+                  {/* Segmented Control Toggle */}
+                  <div className="flex bg-[var(--bg-color)] p-1.5 rounded-2xl border border-[var(--border-color)] shadow-inner">
+                    <button
+                      onClick={() => setView("transactions")}
+                      className={`rounded-xl px-5 py-2 text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                        view === "transactions"
+                          ? "bg-[var(--card-bg)] text-[var(--primary-accent)] shadow-sm"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                      Transactions
+                    </button>
+                    <button
+                      onClick={() => setView("analytics")}
+                      className={`rounded-xl px-5 py-2 text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                        view === "analytics"
+                          ? "bg-[var(--card-bg)] text-[var(--primary-accent)] shadow-sm"
+                          : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                      Analytics
+                    </button>
+                  </div>
+                </div>
+
+                {view === "transactions" && (
+                  <div className="space-y-10">
+                    <Summary summary={summary} />
+                    
+                    <div className="pt-6 border-t border-[var(--border-color)]">
+                      <Filters
+                        typeFilter={typeFilter}
+                        setTypeFilter={setTypeFilter}
+                        category={category}
+                        setCategory={setCategory}
+                        categories={categories}
+                        search={search}
+                        setSearch={setSearch}
+                        onExport={() => setExportDialogOpen(true)}
+                      />
+                    </div>
+                    
+                    <div className="rounded-2xl border border-[var(--border-color)] overflow-hidden bg-[var(--bg-color)]/30">
+                      <Table
+                        transactions={filtered}
+                        allTransactions={txns}
+                        updateTransaction={updateTransaction}
+                        getTransactionValue={getTransactionValue}
+                      />
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {txns.length > 0 && view === "transactions" && (
-                <div className="space-y-6">
-                  <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                    <Summary summary={summary} />
+                {view === "analytics" && (
+                  <div className="animate-[fadeIn_0.4s_ease-out]">
+                    <Analytics transactions={txns} />
                   </div>
-                  <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                    <Filters
-                      typeFilter={typeFilter}
-                      setTypeFilter={setTypeFilter}
-                      category={category}
-                      setCategory={setCategory}
-                      categories={categories}
-                      search={search}
-                      setSearch={setSearch}
-                      onExport={() => setExportDialogOpen(true)}
-                    />
-                  </div>
-                  <div className="overflow-hidden rounded-[1.5rem] border border-white/80 bg-white shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                    <Table
-                      transactions={filtered}
-                      allTransactions={txns}
-                      updateTransaction={updateTransaction}
-                      getTransactionValue={getTransactionValue}
-                    />
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
-              {txns.length > 0 && view === "analytics" && (
-                <div className="rounded-[1.5rem] border border-white/80 bg-white p-6 shadow-[0_18px_60px_rgba(25,28,30,0.08)]">
-                  <Analytics transactions={txns} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white/70 p-12 text-center shadow-[0_18px_60px_rgba(25,28,30,0.05)]">
-              <p className="text-sm text-slate-500">Upload a bank statement PDF to get started.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Export Dialog */}
-      <ExportDialog
-        isOpen={exportDialogOpen}
-        onClose={() => setExportDialogOpen(false)}
-        onExport={handleExport}
-      />
+        {/* Export Dialog */}
+        <ExportDialog
+          isOpen={exportDialogOpen}
+          onClose={() => setExportDialogOpen(false)}
+          onExport={handleExport}
+        />
       </div>
     </PageTransition>
   );
