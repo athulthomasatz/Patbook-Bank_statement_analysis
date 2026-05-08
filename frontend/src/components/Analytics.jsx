@@ -56,27 +56,29 @@ function getTransactionMethod(narration) {
 
 function MetricCard({ label, value, detail, tone = "indigo" }) {
   const toneClasses = {
-    indigo: "bg-indigo-50 text-indigo-900 border-indigo-100",
-    green: "bg-emerald-50 text-emerald-900 border-emerald-100",
-    rose: "bg-rose-50 text-rose-900 border-rose-100",
-    amber: "bg-amber-50 text-amber-900 border-amber-100",
+    indigo: "bg-[var(--primary-accent)]/10 text-[var(--primary-accent)] border-[var(--primary-accent)]/20",
+    green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   };
 
   return (
-    <div className={`rounded-[1.5rem] border p-5 shadow-[0_10px_40px_rgba(25,28,30,0.06)] ${toneClasses[tone]}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
-      <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{value}</div>
-      {detail ? <p className="mt-2 text-sm text-slate-600">{detail}</p> : null}
+    <div className={`rounded-2xl border p-5 transition-transform hover:-translate-y-1 hover:shadow-lg ${toneClasses[tone]}`}>
+      <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{label}</p>
+      <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
+      {detail ? <p className="mt-2 text-sm opacity-70">{detail}</p> : null}
     </div>
   );
 }
 
 function SectionCard({ title, subtitle, children }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200/70 bg-white p-5 shadow-[0_10px_40px_rgba(25,28,30,0.06)] sm:p-6">
-      <div className="mb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">{subtitle}</p>
-        <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">{title}</h3>
+    <section className="glass-card p-5 sm:p-6 animate-[fadeIn_0.5s_ease-out]">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--primary-accent)]">{subtitle}</p>
+          <h3 className="mt-2 text-xl font-bold tracking-tight text-[var(--text-main)]">{title}</h3>
+        </div>
       </div>
       {children}
     </section>
@@ -259,12 +261,12 @@ export default function Analytics({ transactions }) {
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-[1.5rem] border border-slate-200/70 bg-white p-12 text-center shadow-[0_10px_40px_rgba(25,28,30,0.06)]">
-        <svg className="mx-auto mb-4 h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="glass-card p-12 text-center">
+        <svg className="mx-auto mb-4 h-16 w-16 text-[var(--text-muted)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
-        <p className="text-sm text-slate-500">No transactions available for analytics</p>
-        <p className="mt-1 text-xs text-slate-400">Upload a valid bank statement to view insights</p>
+        <p className="text-sm text-[var(--text-main)] font-medium">No transactions available for analytics</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">Upload a valid bank statement to view insights</p>
       </div>
     );
   }
@@ -273,41 +275,60 @@ export default function Analytics({ transactions }) {
     const isExpanded = expandedSection === "all" || expandedSection === id;
 
     return (
-      <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white shadow-[0_10px_40px_rgba(25,28,30,0.06)]">
+      <div className="glass-card overflow-hidden animate-[slideUp_0.4s_ease-out]">
         <button
           onClick={() => setExpandedSection(isExpanded ? "none" : id)}
-          className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50"
+          className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-[var(--bg-color)]"
         >
           <div className="flex items-center gap-3">
-            <span className="text-xl">{icon}</span>
-            <h3 className="text-md font-semibold text-slate-900">{title}</h3>
+            <span className="text-xl bg-[var(--bg-color)] p-2 rounded-lg border border-[var(--border-color)]">{icon}</span>
+            <h3 className="text-lg font-bold text-[var(--text-main)]">{title}</h3>
           </div>
-          <span className="text-slate-400">{isExpanded ? "▼" : "▶"}</span>
+          <span className={`text-[var(--text-muted)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </span>
         </button>
-        {isExpanded ? <div className="px-6 pb-6">{children}</div> : null}
+        <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+          <div className="px-6 pb-6 pt-2 border-t border-[var(--border-color)]/50">{children}</div>
+        </div>
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[1.5rem] border border-slate-200/70 bg-gradient-to-br from-white to-slate-50 p-6 shadow-[0_10px_40px_rgba(25,28,30,0.06)] sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="glass-card p-6 sm:p-8 animate-[slideUp_0.3s_ease-out] relative overflow-hidden">
+        {/* Decorative background element */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-[var(--primary-accent)]/5 blur-3xl pointer-events-none"></div>
+        
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between relative z-10">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Patbook Analytics</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">A calm financial dashboard with clear spending signals.</h2>
-            <p className="mt-4 text-base leading-7 text-slate-600">
+            <p className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-accent)]">Financial Overview</p>
+            <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">A calm dashboard with clear spending signals.</h2>
+            <p className="mt-4 text-base leading-relaxed text-[var(--text-muted)]">
               The layout favors soft contrast, rounded surfaces, and quick scanning so transaction patterns feel readable on every screen size.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => setExpandedSection("all")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "all" ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Expand all</button>
-            <button onClick={() => setExpandedSection("none")} className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${expandedSection === "none" ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Collapse all</button>
+          <div className="flex flex-wrap gap-3">
+            <button 
+              onClick={() => setExpandedSection("all")} 
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${expandedSection === "all" ? "bg-[var(--primary-accent)] text-white shadow-lg shadow-[var(--primary-accent)]/20" : "bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-main)] hover:border-[var(--primary-accent)]/50"}`}
+            >
+              Expand all
+            </button>
+            <button 
+              onClick={() => setExpandedSection("none")} 
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${expandedSection === "none" ? "bg-[var(--primary-accent)] text-white shadow-lg shadow-[var(--primary-accent)]/20" : "bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-main)] hover:border-[var(--primary-accent)]/50"}`}
+            >
+              Collapse all
+            </button>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 relative z-10">
           <MetricCard label="Total Debit" value={formatAmount(totalDebit)} detail="Money spent in the selected statement" tone="rose" />
           <MetricCard label="Total Credit" value={formatAmount(totalCredit)} detail="Money received in the selected statement" tone="green" />
           <MetricCard label="Net Balance" value={formatAmount(netBalance)} detail={netBalance >= 0 ? "Credits outweigh debits" : "Debits exceed credits"} tone="indigo" />
@@ -360,10 +381,10 @@ export default function Analytics({ transactions }) {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dateData.slice(-14)}>
-              <XAxis dataKey="date" tickFormatter={formatShortDate} tick={{ fontSize: 12, fill: "#6b7280" }} />
-              <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
-              <Tooltip labelFormatter={(label) => label} />
-              <Line type="monotone" dataKey="count" stroke="#15196c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <XAxis dataKey="date" tickFormatter={formatShortDate} tick={{ fontSize: 12, fill: "var(--text-muted)" }} />
+              <YAxis tick={{ fontSize: 12, fill: "var(--text-muted)" }} allowDecimals={false} />
+              <Tooltip labelFormatter={(label) => label} contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', color: 'var(--text-main)', borderRadius: '0.75rem' }} />
+              <Line type="monotone" dataKey="count" stroke="var(--primary-accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--primary-accent)" }} activeDot={{ r: 6, fill: "var(--primary-accent-hover)" }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -371,29 +392,29 @@ export default function Analytics({ transactions }) {
 
       <Section title="Smart Category Insights" icon="📊" id="insights">
         {insights.topGrowingCategory ? (
-          <div className="mb-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-            <p className="text-sm text-indigo-900">
-              <span className="font-semibold">Top Growing Category:</span> {insights.topGrowingCategory.category} spending {insights.topGrowingCategory.change > 0 ? "increased" : "decreased"} by{" "}
-              <span className={insights.topGrowingCategory.change > 0 ? "font-semibold text-rose-700" : "font-semibold text-emerald-700"}>
+          <div className="mb-5 rounded-2xl border border-[var(--primary-accent)]/20 bg-[var(--primary-accent)]/5 p-5">
+            <p className="text-sm text-[var(--text-main)]">
+              <span className="font-semibold text-[var(--primary-accent)]">Top Growing Category:</span> {insights.topGrowingCategory.category} spending {insights.topGrowingCategory.change > 0 ? "increased" : "decreased"} by{" "}
+              <span className={insights.topGrowingCategory.change > 0 ? "font-bold text-rose-600 dark:text-rose-400" : "font-bold text-emerald-600 dark:text-emerald-400"}>
                 {Math.abs(insights.topGrowingCategory.change).toFixed(1)}%
               </span>{" "}
-              ({insights.previousMonth} → {insights.currentMonth})
+              <span className="text-[var(--text-muted)]">({insights.previousMonth} → {insights.currentMonth})</span>
             </p>
           </div>
         ) : (
-          <p className="mb-5 text-sm text-slate-500">Need at least 2 months of data for category drift analysis.</p>
+          <p className="mb-5 text-sm text-[var(--text-muted)]">Need at least 2 months of data for category drift analysis.</p>
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
           {insights.categoryChange.slice(0, 6).map((item) => (
-            <div key={item.category} className="rounded-2xl bg-slate-50 p-4">
+            <div key={item.category} className="rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)] p-4">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm font-medium text-slate-900">{item.category}</span>
-                <span className={`text-sm font-semibold ${item.change >= 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                <span className="text-sm font-semibold text-[var(--text-main)]">{item.category}</span>
+                <span className={`text-sm font-bold ${item.change >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                   {item.change >= 0 ? "+" : ""}{item.change.toFixed(1)}%
                 </span>
               </div>
-              <div className="mt-2 text-xs text-slate-500">{formatAmount(item.previous)} → {formatAmount(item.current)}</div>
+              <div className="mt-2 text-xs text-[var(--text-muted)]">{formatAmount(item.previous)} → {formatAmount(item.current)}</div>
             </div>
           ))}
         </div>
@@ -401,50 +422,50 @@ export default function Analytics({ transactions }) {
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Section title="Risk & Alerts" icon="⚠️" id="alerts">
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-slate-900">Unusual Transactions</h4>
+              <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Unusual Transactions</h4>
               {insights.unusualTransactions.length ? (
                 <div className="space-y-2">
                   {insights.unusualTransactions.slice(0, 6).map((transaction, index) => (
-                    <div key={`${transaction.Payee}-${index}`} className="flex items-start justify-between rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm">
+                    <div key={`${transaction.Payee}-${index}`} className="flex items-start justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
                       <div>
-                        <p className="font-medium text-slate-900">{transaction.Payee}</p>
-                        <p className="text-slate-500">{transaction.Date} • {transaction.Category}</p>
+                        <p className="font-semibold text-[var(--text-main)]">{transaction.Payee}</p>
+                        <p className="text-[var(--text-muted)] text-xs mt-0.5">{transaction.Date} • {transaction.Category}</p>
                       </div>
-                      <span className="font-semibold text-amber-900">{formatAmount(transaction.Amount)}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">{formatAmount(transaction.Amount)}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-emerald-700">No unusual transactions detected.</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">No unusual transactions detected.</p>
               )}
             </div>
 
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-slate-900">Low Balance Periods</h4>
+              <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Low Balance Periods</h4>
               {insights.lowBalancePeriods.length ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-400 font-medium">
                   Found {insights.lowBalancePeriods.length} instances where the balance dropped below ₹1,000.
                 </div>
               ) : (
-                <p className="text-sm text-emerald-700">Balance never dropped below ₹1,000.</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Balance never dropped below ₹1,000.</p>
               )}
             </div>
 
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-slate-900">High Frequency Days</h4>
+              <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">High Frequency Days</h4>
               {insights.highFrequencyDays.length ? (
                 <div className="space-y-2">
                   {insights.highFrequencyDays.slice(0, 5).map((day) => (
-                    <div key={day.date} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-                      <span className="text-slate-700">{day.date}</span>
-                      <span className="font-semibold text-slate-900">{day.count} transactions</span>
+                    <div key={day.date} className="flex items-center justify-between rounded-xl bg-[var(--bg-color)] border border-[var(--border-color)] px-4 py-3 text-sm">
+                      <span className="text-[var(--text-muted)]">{day.date}</span>
+                      <span className="font-bold text-[var(--text-main)]">{day.count} transactions</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-emerald-700">No high-frequency spending days detected.</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">No high-frequency spending days detected.</p>
               )}
             </div>
           </div>
@@ -453,36 +474,36 @@ export default function Analytics({ transactions }) {
         <Section title="Merchant Intelligence" icon="🏪" id="merchants">
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-slate-900">Top Merchants by Amount</h4>
+              <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Top Merchants by Amount</h4>
               <div className="space-y-2">
                 {insights.topMerchants.map((merchant) => (
-                  <div key={merchant.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-                    <span className="truncate text-slate-700">{merchant.name}</span>
-                    <span className="font-semibold text-slate-900">{formatAmount(merchant.amount)}</span>
+                  <div key={merchant.name} className="flex items-center justify-between rounded-xl bg-[var(--bg-color)] border border-[var(--border-color)] px-4 py-3 text-sm">
+                    <span className="truncate text-[var(--text-muted)]">{merchant.name}</span>
+                    <span className="font-bold text-[var(--text-main)]">{formatAmount(merchant.amount)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-slate-900">Frequent Merchants</h4>
+              <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Frequent Merchants</h4>
               <div className="space-y-2">
                 {insights.topFrequentMerchants.map((merchant) => (
-                  <div key={merchant.name} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-                    <span className="truncate text-slate-700">{merchant.name}</span>
-                    <span className="font-semibold text-slate-900">{merchant.count} times</span>
+                  <div key={merchant.name} className="flex items-center justify-between rounded-xl bg-[var(--bg-color)] border border-[var(--border-color)] px-4 py-3 text-sm">
+                    <span className="truncate text-[var(--text-muted)]">{merchant.name}</span>
+                    <span className="font-bold text-[var(--text-main)]">{merchant.count} times</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-            <h4 className="text-sm font-semibold text-indigo-900">Hidden Spending</h4>
-            <p className="mt-2 text-2xl font-semibold text-indigo-900">{formatAmount(insights.hiddenSpending.reduce((sum, item) => sum + item.Amount, 0))}</p>
+          <div className="mt-6 rounded-2xl border border-[var(--primary-accent)]/20 bg-[var(--primary-accent)]/5 p-5">
+            <h4 className="text-sm font-bold text-[var(--primary-accent)]">Hidden Spending</h4>
+            <p className="mt-2 text-2xl font-bold text-[var(--text-main)]">{formatAmount(insights.hiddenSpending.reduce((sum, item) => sum + item.Amount, 0))}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {Object.entries(insights.hiddenByCategory).map(([category, amount]) => (
-                <span key={category} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-indigo-900">
+                <span key={category} className="rounded-full bg-[var(--card-bg)] border border-[var(--primary-accent)]/30 px-3 py-1.5 text-xs font-semibold text-[var(--primary-accent)]">
                   {category}: ₹{amount.toFixed(0)}
                 </span>
               ))}
@@ -493,31 +514,31 @@ export default function Analytics({ transactions }) {
 
       <Section title="Payment Method Intelligence" icon="💳" id="payment">
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-slate-900">ATM vs Digital</h4>
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-sm text-slate-500">ATM Withdrawals</p>
-                <p className="mt-1 text-xl font-semibold text-slate-900">{formatAmount((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount)}</p>
+          <div className="rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)] p-5">
+            <h4 className="mb-4 text-sm font-bold text-[var(--text-main)]">ATM vs Digital</h4>
+            <div className="space-y-4">
+              <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 shadow-sm">
+                <p className="text-sm text-[var(--text-muted)]">ATM Withdrawals</p>
+                <p className="mt-1 text-xl font-bold text-[var(--text-main)]">{formatAmount((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount)}</p>
               </div>
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-sm text-slate-500">Digital Payments</p>
-                <p className="mt-1 text-xl font-semibold text-indigo-700">{formatAmount(totalDebit - ((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount || 0))}</p>
+              <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 shadow-sm">
+                <p className="text-sm text-[var(--text-muted)]">Digital Payments</p>
+                <p className="mt-1 text-xl font-bold text-[var(--primary-accent)]">{formatAmount(totalDebit - ((insights.paymentMethods.find((method) => method.name === "ATM") || {}).amount || 0))}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-slate-900">Preferred Payment Methods</h4>
-            <div className="space-y-3">
+          <div className="rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)] p-5">
+            <h4 className="mb-4 text-sm font-bold text-[var(--text-main)]">Preferred Payment Methods</h4>
+            <div className="space-y-4">
               {insights.paymentMethods.slice(0, 6).map((method) => (
                 <div key={method.name}>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="text-slate-700">{method.name}</span>
-                    <span className="text-slate-500">{method.percent.toFixed(1)}%</span>
+                  <div className="mb-1.5 flex items-center justify-between text-sm">
+                    <span className="font-medium text-[var(--text-muted)]">{method.name}</span>
+                    <span className="font-semibold text-[var(--text-main)]">{method.percent.toFixed(1)}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-200">
-                    <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${Math.min(method.percent, 100)}%` }} />
+                  <div className="h-2.5 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]">
+                    <div className="h-full rounded-full bg-[var(--primary-accent)]" style={{ width: `${Math.min(method.percent, 100)}%` }} />
                   </div>
                 </div>
               ))}
@@ -528,24 +549,24 @@ export default function Analytics({ transactions }) {
 
       <Section title="Savings & Efficiency" icon="📈" id="savings">
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white p-6 text-center">
-            <p className={`text-4xl font-semibold ${insights.savingsRate >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+          <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-8 text-center flex flex-col justify-center">
+            <p className={`text-5xl font-bold ${insights.savingsRate >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
               {insights.savingsRate.toFixed(1)}%
             </p>
-            <p className="mt-2 text-sm text-slate-600">{insights.savingsRate >= 0 ? "You're saving money." : "Spending exceeds income."}</p>
+            <p className="mt-3 text-sm font-medium text-[var(--text-muted)]">{insights.savingsRate >= 0 ? "You're saving money. Great job!" : "Spending exceeds income."}</p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-slate-900">Expense Ratio by Category</h4>
-            <div className="space-y-3">
+          <div className="rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)] p-5">
+            <h4 className="mb-4 text-sm font-bold text-[var(--text-main)]">Expense Ratio by Category</h4>
+            <div className="space-y-4">
               {insights.expenseRatio.slice(0, 6).map((item) => (
                 <div key={item.category}>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="text-slate-700">{item.category}</span>
-                    <span className="text-slate-500">{item.percent.toFixed(1)}%</span>
+                  <div className="mb-1.5 flex items-center justify-between text-sm">
+                    <span className="font-medium text-[var(--text-muted)]">{item.category}</span>
+                    <span className="font-semibold text-[var(--text-main)]">{item.percent.toFixed(1)}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-200">
-                    <div className="h-2 rounded-full bg-rose-500" style={{ width: `${Math.min(item.percent, 100)}%` }} />
+                  <div className="h-2.5 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]">
+                    <div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.min(item.percent, 100)}%` }} />
                   </div>
                 </div>
               ))}
