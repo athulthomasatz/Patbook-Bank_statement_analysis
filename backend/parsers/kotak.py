@@ -4,9 +4,56 @@ from datetime import datetime
 
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, normalize, extract_datetime_tuple, get_type
+from utils.payee_extractor import (
+    extract_payee as generic_extract_payee,
+    normalize,
+    extract_datetime_tuple,
+    get_type,
+    clean_name,
+)
 
 log = logging.getLogger("kotak_parser")
+
+
+def _extract_payee(narration: str) -> tuple[str, str]:
+    """Kotak-specific payee extraction.
+
+    Kotak narration formats:
+    - UPI/NAME/REFNO/UPI          → name is at index 1 (2nd segment)
+    - CASHBACK EARNED             → "Cashback", category "Cashback"
+    - Int.Pd.ACCNO:DD-MM-YYYY... → "Interest", category "Interest"
+    - NEFT/...                    → generic fallback
+    - IMPS/...                    → generic fallback
+    """
+    if not narration:
+        return ("Unknown", "Other")
+
+    text = normalize(narration)
+
+    # --- CASHBACK EARNED ---
+    if "CASHBACK" in text:
+        return ("Cashback", "Cashback")
+
+    # --- Interest / Service Tax (Int.Pd.) ---
+    if "INT.PD" in text or "INT PD" in text:
+        return ("Interest", "Interest")
+
+    # --- UPI (Kotak format: UPI/NAME/REFNO/UPI) ---
+    if "UPI/" in text:
+        parts = [p.strip() for p in text.split("/")]
+        # Kotak: parts[0]="UPI", parts[1]="NAME", parts[2]="REFNO", parts[3]="UPI"
+        if len(parts) >= 2 and parts[1]:
+            name = clean_name(parts[1])
+            if name and name != "Unknown" and not name.isdigit():
+                # Detect type from narration to set category
+                if "UPI/CR" in text:
+                    return (name, "UPI")
+                return (name, "UPI")
+        # Fallback to generic UPI extractor
+        return generic_extract_payee(narration)
+
+    # --- NEFT / IMPS / ATM / other — delegate to generic extractor ---
+    return generic_extract_payee(narration)
 
 
 def parse(pdf) -> pd.DataFrame:
@@ -237,12 +284,7 @@ def _parse_from_text(pdf) -> tuple[list, int]:
 
         prev_balance = closing
 
-        payee, category = extract_payee(narration)
-
-        log.debug(
-            "    OK — %s | %s | %s Rs%.2f | bal Rs%.2f",
-            date, payee, txn_type, txn_amount, closing,
-        )
+        payee, category = _extract_payee(narration)
 
         transactions.append({
             "Date": date,
@@ -311,7 +353,7 @@ def _process_row(date_str, description, withdrawal, deposit, balance):
     txn_date_obj, txn_time_obj = extract_datetime_tuple(description)
     txn_time = str(txn_time_obj) if txn_time_obj else ""
 
-    payee, category = extract_payee(description)
+    payee, category = _extract_payee(description)
 
     return {
         "Date": date,
