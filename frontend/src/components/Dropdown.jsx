@@ -17,7 +17,7 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
   }, []);
 
   return (
-    <div ref={dropdownRef} className={`relative inline-block ${className}`}>
+    <div ref={dropdownRef} className={`relative inline-block w-full ${className}`}>
       <button
         type="button"
         onClick={(e) => {
@@ -25,21 +25,21 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-900 transition-all hover:bg-indigo-100 hover:border-indigo-300"
+        className="flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] px-4 py-2.5 text-sm font-medium text-[var(--text-main)] transition-all duration-300 hover:border-[var(--primary-accent)]/50 focus:border-[var(--primary-accent)] focus:ring-2 focus:ring-[var(--primary-accent)]/20"
       >
-        {label}
+        <span className="truncate">{label}</span>
         <svg
-          className={`h-4 w-4 transition-transform text-indigo-600`}
+          className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 text-[var(--text-muted)] ${isOpen ? 'rotate-180 text-[var(--primary-accent)]' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-indigo-200 bg-white shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-full min-w-[200px] rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] shadow-lg shadow-[var(--card-shadow)] animate-[fadeIn_0.2s_ease-out] max-h-60 overflow-y-auto">
           {items.map((item) => (
             <button
               type="button"
@@ -50,7 +50,7 @@ export default function Dropdown({ label, items, onSelect, className = "" }) {
                 onSelect(item.value);
                 setIsOpen(false);
               }}
-              className="block w-full px-4 py-3 text-left text-sm text-indigo-900 transition-colors hover:bg-indigo-50 hover:text-indigo-950 first:rounded-t-2xl last:rounded-b-2xl"
+              className="block w-full px-4 py-3 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--primary-accent)]/10 hover:text-[var(--primary-accent)] first:rounded-t-xl last:rounded-b-xl"
             >
               {item.label}
             </button>
