@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from utils.pdf_loader import load_pdf
 from parsers import get_parser, PARSERS
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger("api")
 
 app = FastAPI(title="Bank Statement Analyzer")
@@ -46,9 +46,6 @@ async def parse_statement(
         raise HTTPException(400, f"Unsupported bank: {bank}")
 
     logs = []
-    logs.append(f"File: {file.filename} ({file.size} bytes)")
-    logs.append(f"Bank: {bank}")
-    logs.append(f"Password: {'yes' if password else 'no'}")
 
     tmp_path = None
     decrypted_path = None
@@ -60,8 +57,6 @@ async def parse_statement(
             tmp.write(content)
             tmp_path = tmp.name
 
-        logs.append(f"Step 1: Saved PDF ({len(content)} bytes)")
-
         # Load PDF (handles decryption)
         class FileProxy:
             def __init__(self, path):
@@ -71,19 +66,26 @@ async def parse_statement(
                     return f.read()
 
         pdf = load_pdf(FileProxy(tmp_path), password if password else None)
-        logs.append(f"Step 2: PDF loaded — {len(pdf.pages)} page(s)")
 
-        # Extract debug info from pages
-        for i, page in enumerate(pdf.pages):
-            text = page.extract_text()
+        # Count tables and text across pages
+        total_tables = 0
+        total_chars = 0
+        for page in pdf.pages:
             tables = page.extract_tables()
-            logs.append(f"  Page {i+1}: {len(tables)} table(s), {len(text) if text else 0} chars text")
+            total_tables += len(tables)
+            text = page.extract_text()
+            total_chars += len(text) if text else 0
+
+        num_pages = len(pdf.pages)
 
         # Parse
         parser = get_parser(bank)
         df = parser(pdf)
-        logs.append(f"Step 3: Parser returned {len(df)} transactions")
         pdf.close()
+
+        # Minimal terminal summary
+        print(f"[{bank}] {file.filename} | {num_pages} page(s), {total_tables} table(s) | Password: {'yes' if password else 'no'} | {len(df)} transaction(s)")
+        logs.append(f"{bank}: {len(df)} transactions from {num_pages} page(s), {total_tables} table(s)")
 
         if df.empty:
             return {
