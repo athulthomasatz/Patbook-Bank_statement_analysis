@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getBanks } from "../api";
 import Dropdown from "./Dropdown";
+import { trackEvent } from "../analytics";
 
 export default function Upload({ onResult, loading, setLoading }) {
   const [bank, setBank] = useState("HDFC");
@@ -35,6 +36,7 @@ export default function Upload({ onResult, loading, setLoading }) {
     setError(null);
     setLoading(true);
     setStatus("loading");
+    trackEvent("upload_statement", "upload", bank);
 
     try {
       const { parseStatement } = await import("../api");
@@ -86,6 +88,7 @@ export default function Upload({ onResult, loading, setLoading }) {
               setBank(selectedBank);
               setError(null);
               setStatus("idle");
+              trackEvent("select_bank", "upload", selectedBank);
             }}
           />
         </div>

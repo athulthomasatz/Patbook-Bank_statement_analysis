@@ -8,6 +8,7 @@ import ExportDialog from "../components/ExportDialog";
 import Analytics from "../components/Analytics";
 import { downloadCSV } from "../api";
 import PageTransition from "../components/PageTransition";
+import { trackEvent } from "../analytics";
 
 export default function Home({ transactions, setTransactions }) {
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,7 @@ export default function Home({ transactions, setTransactions }) {
     }
     downloadCSV(txnsForExport, includeNotes);
     setExportDialogOpen(false);
+    trackEvent("export_csv", "export", includeNotes ? "with_notes" : "without_notes");
   };
 
   const categories = useMemo(() => {
@@ -176,7 +178,7 @@ export default function Home({ transactions, setTransactions }) {
                   {/* Segmented Control Toggle */}
                   <div className="flex bg-[var(--bg-color)] p-1.5 rounded-2xl border border-[var(--border-color)] shadow-inner">
                     <button
-                      onClick={() => setView("transactions")}
+                      onClick={() => { setView("transactions"); trackEvent("view_toggle", "dashboard", "transactions"); }}
                       className={`rounded-xl px-5 py-2 text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                         view === "transactions"
                           ? "bg-[var(--card-bg)] text-[var(--primary-accent)] shadow-sm"
@@ -187,7 +189,7 @@ export default function Home({ transactions, setTransactions }) {
                       Transactions
                     </button>
                     <button
-                      onClick={() => setView("analytics")}
+                      onClick={() => { setView("analytics"); trackEvent("view_toggle", "dashboard", "analytics"); }}
                       className={`rounded-xl px-5 py-2 text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                         view === "analytics"
                           ? "bg-[var(--card-bg)] text-[var(--primary-accent)] shadow-sm"
