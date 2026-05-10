@@ -2,10 +2,9 @@ import logging
 import re
 from datetime import datetime
 
-import pdfplumber
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, extract_datetime_tuple, normalize, get_type
+from utils.payee_extractor import extract_payee, extract_datetime_tuple, get_type
 
 log = logging.getLogger("sbi_parser")
 
@@ -87,7 +86,6 @@ def _parse_from_tables(pdf, data_rows) -> tuple[list, int]:
         # SBI table structure: Value Date | Post Date | Details | Ref No | Debit | Credit | Balance
         # Sometimes columns might shift, so we need to be flexible
         date_str = str(row[0] or "").strip()
-        post_date_str = str(row[1] or "").strip() if len(row) > 1 else ""
         details = str(row[2] or "").strip() if len(row) > 2 else ""
         ref_no = str(row[3] or "").strip() if len(row) > 3 else ""
 

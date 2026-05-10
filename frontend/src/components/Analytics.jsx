@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Bar,
-  BarChart,
   Cell,
   Legend,
   Line,
@@ -82,6 +80,32 @@ function SectionCard({ title, subtitle, children }) {
       </div>
       {children}
     </section>
+  );
+}
+
+function Section({ title, icon, children, id, expandedSection, onToggle }) {
+  const isExpanded = expandedSection === "all" || expandedSection === id;
+
+  return (
+    <div className="glass-card overflow-hidden animate-[slideUp_0.4s_ease-out]">
+      <button
+        onClick={() => onToggle(isExpanded ? "none" : id)}
+        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-[var(--bg-color)]"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl bg-[var(--bg-color)] p-2 rounded-lg border border-[var(--border-color)]">{icon}</span>
+          <h3 className="text-lg font-bold text-[var(--text-main)]">{title}</h3>
+        </div>
+        <span className={`text-[var(--text-muted)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
+      </button>
+      <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="px-6 pb-6 pt-2 border-t border-[var(--border-color)]/50">{children}</div>
+      </div>
+    </div>
   );
 }
 
@@ -271,32 +295,6 @@ export default function Analytics({ transactions }) {
     );
   }
 
-  const Section = ({ title, icon, children, id }) => {
-    const isExpanded = expandedSection === "all" || expandedSection === id;
-
-    return (
-      <div className="glass-card overflow-hidden animate-[slideUp_0.4s_ease-out]">
-        <button
-          onClick={() => setExpandedSection(isExpanded ? "none" : id)}
-          className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-[var(--bg-color)]"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-xl bg-[var(--bg-color)] p-2 rounded-lg border border-[var(--border-color)]">{icon}</span>
-            <h3 className="text-lg font-bold text-[var(--text-main)]">{title}</h3>
-          </div>
-          <span className={`text-[var(--text-muted)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </span>
-        </button>
-        <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-          <div className="px-6 pb-6 pt-2 border-t border-[var(--border-color)]/50">{children}</div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="glass-card p-6 sm:p-8 animate-[slideUp_0.3s_ease-out] relative overflow-hidden">
@@ -390,7 +388,7 @@ export default function Analytics({ transactions }) {
         </div>
       </SectionCard>
 
-      <Section title="Smart Category Insights" icon="📊" id="insights">
+      <Section title="Smart Category Insights" icon="📊" id="insights" expandedSection={expandedSection} onToggle={setExpandedSection}>
         {insights.topGrowingCategory ? (
           <div className="mb-5 rounded-2xl border border-[var(--primary-accent)]/20 bg-[var(--primary-accent)]/5 p-5">
             <p className="text-sm text-[var(--text-main)]">
@@ -421,7 +419,7 @@ export default function Analytics({ transactions }) {
       </Section>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Section title="Risk & Alerts" icon="⚠️" id="alerts">
+        <Section title="Risk & Alerts" icon="⚠️" id="alerts" expandedSection={expandedSection} onToggle={setExpandedSection}>
           <div className="space-y-6">
             <div>
               <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Unusual Transactions</h4>
@@ -471,7 +469,7 @@ export default function Analytics({ transactions }) {
           </div>
         </Section>
 
-        <Section title="Merchant Intelligence" icon="🏪" id="merchants">
+        <Section title="Merchant Intelligence" icon="🏪" id="merchants" expandedSection={expandedSection} onToggle={setExpandedSection}>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <h4 className="mb-3 text-sm font-bold text-[var(--text-main)]">Top Merchants by Amount</h4>
@@ -512,7 +510,7 @@ export default function Analytics({ transactions }) {
         </Section>
       </div>
 
-      <Section title="Payment Method Intelligence" icon="💳" id="payment">
+      <Section title="Payment Method Intelligence" icon="💳" id="payment" expandedSection={expandedSection} onToggle={setExpandedSection}>
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl bg-[var(--bg-color)] border border-[var(--border-color)] p-5">
             <h4 className="mb-4 text-sm font-bold text-[var(--text-main)]">ATM vs Digital</h4>
@@ -547,7 +545,7 @@ export default function Analytics({ transactions }) {
         </div>
       </Section>
 
-      <Section title="Savings & Efficiency" icon="📈" id="savings">
+      <Section title="Savings & Efficiency" icon="📈" id="savings" expandedSection={expandedSection} onToggle={setExpandedSection}>
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-8 text-center flex flex-col justify-center">
             <p className={`text-5xl font-bold ${insights.savingsRate >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>

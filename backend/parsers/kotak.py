@@ -124,11 +124,9 @@ def _parse_from_tables(pdf) -> tuple[list, int]:
                 # Some table extractions may miss the # column, so detect by checking
                 # if first field looks like a date
                 if len(row) >= 7:
-                    # Full row with all 7 columns
-                    serial = str(row[0] or "").strip()
+                    # Full row with all 7 columns: #, Date, Description, Chq/Ref, Withdrawal, Deposit, Balance
                     date_str = str(row[1] or "").strip()
                     description = str(row[2] or "").strip()
-                    ref_no = str(row[3] or "").strip()
                     withdrawal = str(row[4] or "").strip()
                     deposit = str(row[5] or "").strip()
                     balance = str(row[6] or "").strip()
@@ -138,7 +136,6 @@ def _parse_from_tables(pdf) -> tuple[list, int]:
                     if _is_kotak_date(first):
                         date_str = first
                         description = str(row[1] or "").strip()
-                        ref_no = str(row[2] or "").strip()
                         withdrawal = str(row[3] or "").strip()
                         deposit = str(row[4] or "").strip()
                         balance = str(row[5] or "").strip()
@@ -146,7 +143,6 @@ def _parse_from_tables(pdf) -> tuple[list, int]:
                         # row[0] is serial #, shift everything
                         date_str = str(row[1] or "").strip()
                         description = str(row[2] or "").strip()
-                        ref_no = str(row[3] or "").strip()
                         withdrawal = str(row[4] or "").strip()
                         deposit = str(row[5] or "").strip()
                         balance = ""
@@ -157,7 +153,6 @@ def _parse_from_tables(pdf) -> tuple[list, int]:
                     withdrawal = str(row[2] or "").strip()
                     deposit = str(row[3] or "").strip()
                     balance = str(row[4] or "").strip()
-                    ref_no = ""
 
                 result = _process_row(date_str, description, withdrawal, deposit, balance)
                 if result:

@@ -2,10 +2,9 @@ import logging
 import re
 from datetime import datetime
 
-import pdfplumber
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, normalize, extract_datetime_tuple, get_type
+from utils.payee_extractor import extract_payee, extract_datetime_tuple, get_type
 
 log = logging.getLogger("canara_parser")
 

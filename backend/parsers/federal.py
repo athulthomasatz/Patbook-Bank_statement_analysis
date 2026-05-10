@@ -2,10 +2,9 @@ import logging
 import re
 from datetime import datetime
 
-import pdfplumber
 import pandas as pd
 
-from utils.payee_extractor import extract_payee, normalize, extract_datetime_tuple, get_type
+from utils.payee_extractor import extract_payee, extract_datetime_tuple
 
 log = logging.getLogger("federal_parser")
 
@@ -142,7 +141,7 @@ def parse(pdf) -> pd.DataFrame:
             continue
 
         date_str = str(row[0] or "").strip()
-        value_date_str = str(row[1] or "").strip() if len(row) > 1 else ""
+        str(row[1] or "").strip() if len(row) > 1 else ""
         particulars = str(row[2] or "").strip() if len(row) > 2 else ""
         tran_type = str(row[3] or "").strip() if len(row) > 3 else ""
         tran_id = str(row[4] or "").strip() if len(row) > 4 else ""
@@ -233,11 +232,9 @@ def _process_row_data(data: dict) -> dict | None:
     date_str = data["date"]
     narration = data["narration"]
     tran_type = data["tran_type"]
-    tran_id = data["tran_id"]
     withdrawal = data["withdrawal"]
     deposits = data["deposits"]
     balance = data["balance"]
-    dr_cr = data["dr_cr"]
 
     # Validate date
     if not _is_valid_date(date_str):

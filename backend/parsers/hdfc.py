@@ -58,8 +58,6 @@ def parse(pdf) -> pd.DataFrame:
                 narration_parts.append(next_line)
                 i += 1
 
-            full_text = " ".join(narration_parts)
-
             # Extract all amounts (X,XXX.XX pattern) from the first line only
             amounts = AMOUNT_RE.findall(rest)
 

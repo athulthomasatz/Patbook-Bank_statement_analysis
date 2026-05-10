@@ -76,7 +76,7 @@ export default function Home({ transactions, setTransactions }) {
       data = data.filter((t) => t.Payee?.toLowerCase().includes(q));
     }
     // Apply edits to filtered transactions
-    return data.map((t, idx) => {
+    return data.map((t) => {
       const originalIndex = txns.indexOf(t);
       return {
         ...t,
@@ -84,6 +84,7 @@ export default function Home({ transactions, setTransactions }) {
         Notes: getTransactionValue(originalIndex, "Notes") || "",
       };
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txns, editedTransactions, typeFilter, category, search]);
 
   return (
@@ -224,7 +225,6 @@ export default function Home({ transactions, setTransactions }) {
                         transactions={filtered}
                         allTransactions={txns}
                         updateTransaction={updateTransaction}
-                        getTransactionValue={getTransactionValue}
                       />
                     </div>
                   </div>

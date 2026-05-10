@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Table({ transactions, allTransactions, updateTransaction, getTransactionValue }) {
+export default function Table({ transactions, allTransactions, updateTransaction }) {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingField, setEditingField] = useState(null);
 
