@@ -18,21 +18,14 @@ export default function About() {
               <p className="mt-6 text-lg leading-relaxed text-[var(--text-muted)] max-w-lg">
                 A sophisticated environment designed for focused financial stewardship. We prioritize discretion, calm, and clarity over loud interfaces.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <button type="button" className="rounded-xl bg-[var(--primary-accent)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[var(--primary-accent)]/20 transition-all hover:bg-[var(--primary-accent-hover)] hover:-translate-y-0.5">
-                  Get Started
-                </button>
-                <button type="button" className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] px-6 py-3 text-sm font-semibold text-[var(--text-main)] transition-all hover:border-[var(--primary-accent)]/50 hover:bg-[var(--bg-color)]">
-                  View Demo
-                </button>
-              </div>
+
             </div>
 
-            <div className="relative group">
+            <div className="relative group max-w-xl lg:ml-auto">
               <div className="absolute -inset-1 bg-gradient-to-r from-[var(--primary-accent)] to-indigo-500 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-xl">
+              <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-xl aspect-[4/3]">
                 <img
-                  src="https://lh3.googleusercontent.com/aida/ADBb0uir0iDavdv0PiYjiR_2BWUvdwT1uAF0gqMNdIw2mnSFP64yKqzE4zvRZ4oM6r9-5DuqbsadMc8cffXnYXynbwZH3j5YTj11DEznqqp2Sbar02BBuaxpqznPadq3uHLTSpqji3B8iEa0eH2ufN7UQA_KMryQTcG2XAk1y2j--EOa8BXNwQKoaRko5bWkOqlvXy7Aet9NZ-qPId2NnmMgAFhD4Nq3IMKia_K7KdeL5GIGt8cDwXUq4deNwitzTWr3k3nIYQ_pBotJDw"
+                  src="/vision_illustration.png"
                   alt="Dashboard preview"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -137,23 +130,7 @@ export default function About() {
           </div>
         </section>
 
-        {/* Image Grid */}
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-lg group">
-            <img
-              src="https://lh3.googleusercontent.com/aida/ADBb0uidBPkGzJJH-x9OLYNq9H_GZobZjBSWcXPfIrImpnBFgSDpdbO2VpUd0obbmQN5IxBjyIzTK_RGS47wf8BUKCfhwlZ_FLfU1BSbNj7hdHWRs1drbf0NyOzsAUVRiWpJiUpl3oJLoOjsws_3QPbkLvuwLRic5eTk3X1F2hdb_yzHtXfwaFj7Olgug0MhGjzu09vzPSseG8K8YpHhFcxTss9HMTutLvR5Mw9zrRdG4MOZ_JbB8CYAiPL-E0Mf5RczGFbKUyi6ta6vbw"
-              alt="Workspace preview"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-lg group">
-            <img
-              src="https://lh3.googleusercontent.com/aida/ADBb0ugzhwiLXfzShW5v0qXOA-THDqqTcAXQgyc2LtcLl-bHIBh8wyOK9bkzLXOFK9apJmCEO80EcKPlRJCyurW9Ykws_G3mCI_PcPYsJHU_cxstnDgNpZ-gTmmYb-VRFbgLcQmgvyi1Uazmck0JQ9ryJj4gV0qzvsjR8h8fT3cKCMfOMwAUl4hQDyi10yso1QnPJungWVFX0ositlZLfMiYYCFNKKIhZ9Gw_LWcCYSdbBao0hKkaXveYXVRBbH9OixYEh1xfw8igPARug"
-              alt="Transactions preview"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          </div>
-        </section>
+
       </div>
     </PageTransition>
   );

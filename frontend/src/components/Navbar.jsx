@@ -96,9 +96,7 @@ export default function Navbar({ theme, toggleTheme }) {
               </div>
             </button>
 
-            <button className="hidden md:block rounded-full bg-[var(--primary-accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--primary-accent-hover)] transition-all hover:scale-105 hover:shadow-md">
-              Get Started
-            </button>
+
 
             {/* Mobile Menu Toggle */}
             <button
@@ -139,9 +137,7 @@ export default function Navbar({ theme, toggleTheme }) {
               {item.label}
             </Link>
           ))}
-          <button className="w-full mt-2 rounded-lg bg-[var(--primary-accent)] px-4 py-3 text-sm font-medium text-white text-center">
-            Get Started
-          </button>
+
         </nav>
       </div>
     </header>

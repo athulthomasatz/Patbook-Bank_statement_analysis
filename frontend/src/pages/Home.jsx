@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Upload from "../components/Upload";
 import Summary from "../components/Summary";
 import Filters from "../components/Filters";
@@ -19,6 +19,16 @@ export default function Home({ transactions, setTransactions }) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [logs, setLogs] = useState(null);
   const [summary, setSummary] = useState(null);
+  const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (transactions && transactions.length > 0) {
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [transactions]);
 
   const txns = transactions || [];
 
@@ -149,7 +159,7 @@ export default function Home({ transactions, setTransactions }) {
 
         {/* Data Section - Redesigned Dashboard Layout */}
         {txns && (
-          <section className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
+          <section ref={resultsRef} className="space-y-8 animate-[fadeIn_0.5s_ease-out] scroll-mt-24">
             {txns.length === 0 ? (
               <div className="glass-card p-8 border-amber-200/50 bg-amber-50/5">
                 <div className="flex items-start gap-4">
