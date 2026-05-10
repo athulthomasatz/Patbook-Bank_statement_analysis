@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Google Analytics (gtag) integration** - User behavior tracking with:
+  - Automatic page view tracking on route changes
+  - Custom events: bank selection, PDF upload, view toggle, CSV export
+  - Environment-based measurement ID via `VITE_GA_MEASUREMENT_ID`
+  - Scripts injected dynamically from `frontend/src/analytics.js`
+- **Microsoft Clarity integration** - Session recordings and heatmaps via:
+  - Environment-based project ID via `VITE_CLARITY_PROJECT_ID`
+  - Dynamic script injection (skipped when ID is placeholder)
+- **Analytics module** (`frontend/src/analytics.js`) with `initAnalytics()`, `trackPageView()`, `trackEvent()`
+- **Route change tracking** - `RouteTracker` component in `App.jsx` fires page views
+- **Deployment configs** - Open-source project setup:
+  - `render.yaml` for backend deployment on Render
+  - `frontend/public/_redirects` for Cloudflare Pages SPA routing
+  - Environment-based CORS configuration via `ALLOWED_ORIGINS`
+- **GitHub Actions CI** - Automated lint and build checks on PRs
+- **Issue/PR templates** - Bug report, feature request, and pull request templates
+- **CONTRIBUTING.md** - Setup instructions and contribution guidelines for open-source contributors
+
+### Changed
+- **CORS hardened** - Backend reads allowed origins from `ALLOWED_ORIGINS` env var instead of hardcoded localhost URLs (falls back to localhost for development)
+- **Environment variables** - Analytics tracking IDs stored in `frontend/.env` (gitignored)
+- **Updated .gitignore** - Added `.env`, `.env.local`, `.env.production` to frontend gitignore
 - **SBI parser** - New parser for SBI bank statements with support for:
   - Table-based extraction (primary) with flexible column positioning
   - Text-based parsing as fallback for borderless tables

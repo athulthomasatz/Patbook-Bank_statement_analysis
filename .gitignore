@@ -1,3 +1,22 @@
 /bank
+
 __pycache__/
 *.pyc
+
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.env.local
+.env.production
+__pycache__/
+*.pyc
+frontend/.env
+backend/.env
+node_modules/
+dist/
+build/

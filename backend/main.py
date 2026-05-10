@@ -16,9 +16,16 @@ log = logging.getLogger("api")
 
 app = FastAPI(title="Bank Statement Analyzer")
 
+# CORS: use ALLOWED_ORIGINS env var in production, fallback to localhost for dev
+_origins = os.getenv("ALLOWED_ORIGINS", "").strip()
+ALLOWED_ORIGINS = [o.strip() for o in _origins.split(",") if o.strip()] or [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

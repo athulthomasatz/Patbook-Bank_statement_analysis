@@ -24,6 +24,24 @@ Bank Statement Analyzer - A web application for parsing, analyzing, and exportin
 - **Chart Library**: Uses Recharts for visual analytics (pie charts, bar charts)
 - **Routing**: React Router for client-side navigation with `/`, `/about`, `/analytics` routes
 - **Dynamic Bank Selection**: Bank dropdown fetches available banks from `/api/banks` API endpoint
+- **Analytics Integration**: Google Analytics (gtag) and Microsoft Clarity for user behavior tracking (`frontend/src/analytics.js`)
+- **Environment Variables**: Vite env vars (`VITE_*` prefix) in `frontend/.env` for tracking IDs and API URLs
+
+## Deployment
+
+### Frontend → Cloudflare Pages
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variables set in Cloudflare dashboard (e.g., `VITE_GA_MEASUREMENT_ID`, `VITE_CLARITY_PROJECT_ID`)
+
+### Backend → Render
+- Render config: `render.yaml` at project root
+- Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- Environment variables set in Render dashboard (e.g., `ALLOWED_ORIGINS`)
+
+### CORS Configuration
+- Origins are read from the `ALLOWED_ORIGINS` environment variable (comma-separated URLs)
+- Falls back to localhost origins for local development if `ALLOWED_ORIGINS` is not set
 
 ## Common Commands
 
@@ -211,3 +229,24 @@ When parsing returns zero transactions, the app displays a warning suggesting po
 - `success`: Processing completed successfully
 - `error`: Processing failed with error message
 - `warning`: No transactions found (possible bank mismatch)
+
+## Analytics & Tracking
+
+### Google Analytics (gtag)
+- Measurement ID stored in `VITE_GA_MEASUREMENT_ID` env var
+- Automatically tracks page views on route changes via `RouteTracker` component in `App.jsx`
+- Custom events tracked via `trackEvent(action, category, label)`:
+  - `select_bank` (category: upload) — when user picks a bank
+  - `upload_statement` (category: upload) — when user submits a PDF
+  - `view_toggle` (category: dashboard) — switching transactions/analytics view
+  - `export_csv` (category: export) — when user exports CSV
+
+### Microsoft Clarity
+- Project ID stored in `VITE_CLARITY_PROJECT_ID` env var
+- Provides session recordings, heatmaps, and user behavior insights
+
+### Analytics Module (`frontend/src/analytics.js`)
+- `initAnalytics()` — called in `main.jsx` on app load, injects gtag and Clarity scripts
+- `trackPageView(path)` — fires page view on route change
+- `trackEvent(action, category, label)` — sends custom GA events
+- Scripts are not loaded when IDs are still placeholders (avoids dev noise)
