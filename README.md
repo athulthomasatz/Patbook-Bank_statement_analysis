@@ -2,6 +2,8 @@
 
 Parse bank statement PDFs, extract transactions, and export them as CSV.
 
+> This was initially built for personal use to make sense of my own bank statements. I'm putting it out here in case it helps someone else. It's not perfect — but it gets the job done.
+
 ## What it does
 
 - Upload a password-protected bank statement PDF
