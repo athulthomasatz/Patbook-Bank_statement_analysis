@@ -1,23 +1,15 @@
-const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const GTM_ID = import.meta.env.VITE_GTM_ID;
 const CLARITY_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
 export function initAnalytics() {
-  // Google Analytics (gtag.js)
-  if (GA_ID && GA_ID !== 'G-XXXXXXXXXX') {
+  // Google Tag Manager
+  if (GTM_ID && GTM_ID !== 'GTM-XXXXXXX') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
     const script = document.createElement('script');
     script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    script.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
     document.head.appendChild(script);
-
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      window.dataLayer.push(arguments);
-    }
-    window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', GA_ID, {
-      page_path: window.location.pathname + window.location.search,
-    });
   }
 
   // Microsoft Clarity
@@ -39,18 +31,22 @@ export function initAnalytics() {
 
 // Track page views on route change (call from router)
 export function trackPageView(path) {
-  if (GA_ID && GA_ID !== 'G-XXXXXXXXXX' && window.gtag) {
-    window.gtag('config', GA_ID, { page_path: path });
+  if (GTM_ID && GTM_ID !== 'GTM-XXXXXXX') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'page_view', page_path: path });
   }
 }
 
 // Track custom events (button clicks, etc.)
 export function trackEvent(action, category, label, value) {
-  if (GA_ID && GA_ID !== 'G-XXXXXXXXXX' && window.gtag) {
-    window.gtag('event', action, {
+  if (GTM_ID && GTM_ID !== 'GTM-XXXXXXX') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'custom_event',
+      event_action: action,
       event_category: category,
       event_label: label,
-      value: value,
+      event_value: value,
     });
   }
 }
