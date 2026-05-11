@@ -304,26 +304,13 @@ export default function Analytics({ transactions }) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between relative z-10">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-wider text-[var(--primary-accent)]">Financial Overview</p>
-            <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">A calm dashboard with clear spending signals.</h2>
+            <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight text-[var(--text-main)]">Snapshot of Your Financial Health</h2>
             <p className="mt-4 text-base leading-relaxed text-[var(--text-muted)]">
-              The layout favors soft contrast, rounded surfaces, and quick scanning so transaction patterns feel readable on every screen size.
+              Monitor key metrics like total spending, credits, and your overall savings rate to gain a clear understanding of your financial trends and cash flow.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button 
-              onClick={() => setExpandedSection("all")} 
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${expandedSection === "all" ? "bg-[var(--primary-accent)] text-white shadow-lg shadow-[var(--primary-accent)]/20" : "bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-main)] hover:border-[var(--primary-accent)]/50"}`}
-            >
-              Expand all
-            </button>
-            <button 
-              onClick={() => setExpandedSection("none")} 
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${expandedSection === "none" ? "bg-[var(--primary-accent)] text-white shadow-lg shadow-[var(--primary-accent)]/20" : "bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-main)] hover:border-[var(--primary-accent)]/50"}`}
-            >
-              Collapse all
-            </button>
-          </div>
+
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4 relative z-10">
