@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -18,7 +18,13 @@
   --primary-accent-hover: #4338CA;
   --card-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.06);
   --card-shadow-hover: 0 40px 80px -15px rgba(0, 0, 0, 0.18), 0 20px 30px -10px rgba(0, 0, 0, 0.12);
-  
+
+  /* Logo variables — light mode */
+  --logo-accent: #2563EB;
+  --logo-accent-bg: #EFF6FF;
+  --logo-text: #0F172A;
+  --logo-subtle: #64748B;
+
   color-scheme: light;
 }
 
@@ -34,7 +40,13 @@ html.dark {
   --primary-accent-hover: #60A5FA;
   --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
   --card-shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.3);
-  
+
+  /* Logo variables — dark mode */
+  --logo-accent: #3B82F6;
+  --logo-accent-bg: #1E293B;
+  --logo-text: #F1F5F9;
+  --logo-subtle: #94A3B8;
+
   color-scheme: dark;
 }
 
@@ -141,4 +153,11 @@ button, input, select, textarea {
 
 .table-row-hover:hover::before {
   transform: scaleY(1);
+}
+
+/* Logo responsive: hide wordmark on mobile, show on md+ */
+@media (max-width: 767px) {
+  .patbook-wordmark {
+    display: none !important;
+  }
 }
