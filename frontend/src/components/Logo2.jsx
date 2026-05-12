@@ -136,11 +136,11 @@ export default function Logo2({ iconOnly = false, height = 40 }) {
         >
           <span
             style={{
-              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontWeight: 700,
               fontSize: `${height * 0.52}px`,
               color: "var(--logo-text, #0F172A)",
-              letterSpacing: "-0.3px",
+              letterSpacing: "0.01em",
               lineHeight: 1.1,
             }}
           >

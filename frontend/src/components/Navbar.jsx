@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import Logo2 from "./Logo2";
+import Logo1 from "./Logo1";
 
 const navLinks = [
   { label: "Home", path: "/" },
@@ -36,7 +36,7 @@ export default function Navbar({ theme, toggleTheme }) {
             className="hover:opacity-85 transition-opacity"
             aria-label="Patbook — Bank Statement Analyzer"
           >
-            <Logo2 height={40} />
+            <Logo1 height={40} />
           </Link>
 
           {/* Desktop Navigation */}
