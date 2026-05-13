@@ -134,30 +134,29 @@ button, input, select, textarea {
 }
 
 /* Table row hover left border animation */
-.table-row-hover {
-  position: relative;
+.table-row-hover td:first-child {
+  box-shadow: inset 3px 0 0 0 transparent;
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.table-row-hover::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background-color: var(--primary-accent);
-  transform: scaleY(0);
-  transform-origin: center;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.table-row-hover:hover td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--primary-accent);
 }
 
-.table-row-hover:hover::before {
-  transform: scaleY(1);
+/* Logo wordmark layout */
+.patbook-wordmark {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1;
 }
 
-/* Logo responsive: hide wordmark on mobile, show on md+ */
+/* Logo responsive: show name only on mobile, hide tagline */
 @media (max-width: 767px) {
-  .patbook-wordmark {
+  .patbook-tagline {
     display: none !important;
+  }
+  .patbook-name {
+    font-size: 1rem !important;
   }
 }
