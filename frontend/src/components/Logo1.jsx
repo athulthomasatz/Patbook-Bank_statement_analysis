@@ -91,18 +91,18 @@ export default function Logo1({ iconOnly = false, height = 40 }) {
         />
       </svg>
 
-      {/* Wordmark + Tagline — hidden on mobile */}
+      {/* Wordmark + Tagline */}
       {!iconOnly && (
         <div
           className="patbook-wordmark"
           style={{
-            display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             lineHeight: 1,
           }}
         >
           <span
+            className="patbook-name"
             style={{
               fontFamily: "'Inter', system-ui, sans-serif",
               fontWeight: 700,
@@ -115,6 +115,7 @@ export default function Logo1({ iconOnly = false, height = 40 }) {
             Patbook
           </span>
           <span
+            className="patbook-tagline"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
               fontWeight: 400,
