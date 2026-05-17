@@ -4,6 +4,7 @@ from parsers.union import parse as parse_union
 from parsers.federal import parse as parse_federal
 from parsers.sbi import parse as parse_sbi
 from parsers.kotak import parse as parse_kotak
+from parsers.pnb import parse as parse_pnb
 
 PARSERS = {
     "HDFC": parse_hdfc,
@@ -12,6 +13,7 @@ PARSERS = {
     "Federal Bank": parse_federal,
     "SBI": parse_sbi,
     "Kotak": parse_kotak,
+    "PNB": parse_pnb,
 }
 
 
