@@ -31,6 +31,11 @@ app.add_middleware(
 )
 
 
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/api/banks")
 def list_banks():
     return list(PARSERS.keys())

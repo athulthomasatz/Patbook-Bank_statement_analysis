@@ -29,6 +29,11 @@ jobs:
           pip install ruff
           ruff check .
 
+      - name: Run parser tests
+        run: |
+          pip install pytest
+          python -m pytest tests/ -v
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

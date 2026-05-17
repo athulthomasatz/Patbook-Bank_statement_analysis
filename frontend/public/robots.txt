@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://patbook-bank-statement-analysis.pages.dev/sitemap.xml
