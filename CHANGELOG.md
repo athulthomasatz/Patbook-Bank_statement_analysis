@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **PNB (Punjab National Bank) parser** - New parser with support for:
+  - Table-based extraction with multi-line remark continuation
+  - UPI transactions: extracts payee, bank code, and merchant category from VPA (Paytm, Amazon Pay, PhonePe, Google Pay, BharatPe)
+  - IMPS transactions: direction (IN/OUT), mobile number, sender/recipient name
+  - NEFT and RTGS transactions: direction and beneficiary name extraction
+  - Cash deposits/withdrawals, interest, charges, and cheque payments (via Instrument ID)
+  - Date format: DD/MM/YYYY; explicit DR/CR type detection
+  - 23 unit tests in `backend/tests/test_pnb.py`
+- **FastAPI Health endpoint** (`GET /api/health`) - Lightweight status check for keepalive pings
+- **Render keepalive ping workflow** (`.github/workflows/ping.yml`) - GitHub Actions cron job running every 5 minutes to prevent Render free-tier sleep
+- **Parser unit tests** - `backend/tests/test_canara.py` (16 tests) and `backend/tests/test_pnb.py` (23 tests), run in CI via pytest
 - **Google Analytics (gtag) integration** - User behavior tracking with:
   - Automatic page view tracking on route changes
   - Custom events: bank selection, PDF upload, view toggle, CSV export
@@ -61,6 +72,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - IMPS transactions (extracts recipient name)
   - Line-break hyphen removal for cleaner payee extraction
   - IFN wallet categories: Food, Fuel, Shopping, Medical, Transfer
+- **Kotak parser** - Added to parser registry with Kotak-specific payee extraction (UPI/NAME/REFNO format, cashback, interest)
+
+### Changed
+- **Canara Bank parser reliability overhaul**:
+  - Fixed `get_type()` in `utils/payee_extractor.py` to return `"Unknown"` instead of forcing `"Debit"` for all non-UPI/ATM transactions (affected all parsers)
+  - Added Canara-specific date validators (`_is_canara_date`, `_parse_canara_date`) for `DD-MM-YYYY` format
+  - Stricter table/text strategy: requires ≥3 data rows AND ≥50% valid dates before choosing table mode
+  - Smarter text-mode amount extraction: finds first non-zero amount before balance instead of brittle `amounts[-2]`
+  - Removed buggy lookback narration merging; simplified to forward-only continuation merging
+  - Better debit/credit fallback using balance comparison + keyword heuristics when type is Unknown
+  - More robust `prev_balance` initialization (seeds from first transaction if opening balance missing)
+- **CI workflow** - Now runs parser tests (`pytest tests/`) in addition to ruff linting
+- **Ping workflow** - Added `RENDER_URL` secret validation with clear error message when unset
 
 ### Fixed
 - **Self-transfer detection logic** - Removed flawed name-based self-transfer detection (checked for "ATHUL" in payee name). TODO added for implementing proper self-transfer detection using account numbers, IFSC codes, or transaction patterns in a future stage
@@ -68,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Double normalization in Canara parser** - Removed redundant text normalization when determining transaction type; now uses `get_type()` from `payee_extractor.py` directly
 - **Datetime tuple extraction** - Enhanced `extract_datetime_tuple()` to try multiple date format combinations (`DD/MM/YYYY`, `DD/MM/YY`, `DD-MM-YYYY`, `DD-MM-YY`)
 - **Union Bank merchant mapping scope** - Moved "INDIAN" → "Zerodha" mapping from global `MERCHANT_MAPPINGS` to Union Bank parser only, preventing it from affecting other banks
+- **Pycache cleanup** - Removed `__pycache__` directories from git tracking and local working tree
 
 ## [0.2.0] - 2026-05-02
 

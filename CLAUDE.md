@@ -10,9 +10,10 @@ Bank Statement Analyzer - A web application for parsing, analyzing, and exportin
 
 ### Backend (Python/FastAPI)
 - **Entry point**: `backend/main.py` - FastAPI app with CORS enabled for localhost:5173 and localhost:3000
+  - Endpoints: `GET /api/health`, `GET /api/banks`, `POST /api/parse`, `POST /api/export`
 - **PDF Loading**: `backend/utils/pdf_loader.py` - Handles PDF decryption using pikepdf, returns pdfplumber object
 - **Parser Registry**: `backend/parsers/__init__.py` - Maps bank names to parser functions (PARSERS dict)
-- **Parser Functions**: Each bank parser (`canara.py`, `hdfc.py`, `union.py`, `federal.py`, `sbi.py`) returns a pandas DataFrame with columns: Date, Payee, Category, Type, Amount, Balance, Bank, Narration
+- **Parser Functions**: Each bank parser (`canara.py`, `hdfc.py`, `union.py`, `federal.py`, `sbi.py`, `kotak.py`, `pnb.py`) returns a pandas DataFrame with columns: Date, Payee, Category, Type, Amount, Balance, Bank, Narration
 - **Payee Extraction**: `backend/utils/payee_extractor.py` - Extracts payee names and transaction categories from narration text using regex patterns and merchant mappings
 
 ### Frontend (React/Vite)
@@ -38,6 +39,7 @@ Bank Statement Analyzer - A web application for parsing, analyzing, and exportin
 - Render config: `render.yaml` at project root
 - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 - Environment variables set in Render dashboard (e.g., `ALLOWED_ORIGINS`)
+- **Keepalive ping**: GitHub Actions workflow `.github/workflows/ping.yml` runs every 5 minutes to prevent free-tier sleep. Requires `RENDER_URL` secret in repo settings.
 
 ### CORS Configuration
 - Origins are read from the `ALLOWED_ORIGINS` environment variable (comma-separated URLs)
@@ -94,19 +96,24 @@ PARSERS = {
     "Union Bank": parse_union,
     "Federal Bank": parse_federal,
     "SBI": parse_sbi,
+    "Kotak": parse_kotak,
+    "PNB": parse_pnb,
     "Axis": parse_axis,  # Add your bank here
 }
 ```
 
 4. The bank name will automatically appear in the frontend bank dropdown via the `/api/banks` endpoint (no frontend changes needed)
+5. Add unit tests in `backend/tests/test_axis.py` following the existing test patterns
 
 ## Parser Implementation Notes
 
-- Use `_process_row()` helper pattern for consistent row processing (see `canara.py`)
+- Use `_process_row()` helper pattern for consistent row processing (see `canara.py`, `pnb.py`)
 - Each parser should handle both table extraction and text-based parsing as fallback
 - Use `payee_extractor.extract_payee(narration)` for payee/category extraction
 - Use `payee_extractor.normalize()` to fix broken PDF text (hyphenated line breaks, word fragments)
 - Sort transactions by date/time before returning the DataFrame
+- Add bank-specific date validators (e.g., `_is_pnb_date`, `_is_canara_date`) for reliability
+- Add unit tests in `backend/tests/test_<bank>.py` covering date validation, row processing, and payee extraction
 
 ## PDF Decryption
 
@@ -119,14 +126,37 @@ The backend supports password-protected PDFs through `pdf_loader.py`. The decryp
 
 The `payee_extractor.py` module handles:
 - Normalizing broken PDF text (joining hyphenated words, word fragments)
-- Detecting transaction type (Credit/Debit) from UPI strings
+- Detecting transaction type (Credit/Debit/Unknown) from UPI strings and keywords
 - Extracting payee name and category from narration
 - Merchant name mappings for known merchants (see MERCHANT_MAPPINGS dict)
 - UPI transaction parsing (format: `UPI/CR|DR/REFNO/NAME/BANK/...`)
 
+**Note**: `get_type()` returns `"Unknown"` for transactions that don't match UPI/ATM patterns. Parsers should fall back to balance comparison or column-based detection (DR/CR) when type is Unknown.
+
 **Note**: Self-transfer detection has been removed (previously used name-based detection which was unreliable). Proper self-transfer detection using account numbers, IFSC codes, or transaction patterns is planned for a future stage.
 
 Add new merchant mappings to `MERCHANT_MAPPINGS` to improve categorization.
+
+## Testing
+
+Parser tests live in `backend/tests/` and are run via pytest in CI.
+
+### Running Tests
+```bash
+cd backend
+python -m pytest tests/ -v
+```
+
+### Existing Test Coverage
+- `test_canara.py` — 16 tests: date validation, row processing, amount extraction edge cases
+- `test_pnb.py` — 23 tests: date validation, UPI/IMPS/NEFT/RTGS payee extraction, row processing, cheque handling
+
+### Adding New Parser Tests
+Follow the pattern in `test_pnb.py`:
+1. Test date validators (`_is_valid_date`, `_parse_date`)
+2. Test amount parsing (`_amt`)
+3. Test payee/category extraction for each transaction type
+4. Test `_process_row` or `_process_row_data` for debit, credit, skip, and edge cases
 
 ## Analytics Dashboard
 
