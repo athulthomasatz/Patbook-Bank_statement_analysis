@@ -59,7 +59,7 @@ def get_type(text):
         return "Debit"
     if "ATM CASH" in text:
         return "Debit"
-    return "Debit"
+    return "Unknown"
 
 
 # ---------- CHANNEL ----------

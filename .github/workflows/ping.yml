@@ -1,0 +1,18 @@
+name: Ping Render
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        run: |
+          curl -sSf --max-time 30 \
+            "${RENDER_URL}/api/health" \
+            || echo "Ping failed"
+        env:
+          RENDER_URL: ${{ secrets.RENDER_URL }}
