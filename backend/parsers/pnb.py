@@ -78,7 +78,6 @@ def _extract_pnb_payee_category(remarks: str, txn_type: str) -> tuple[str, str]:
     imps_match = re.match(r'IMPS-(IN|OUT)/(\d{12})/(\d{10})/(.+)', text)
     if imps_match:
         direction = imps_match.group(1)
-        mobile = imps_match.group(3)
         sender_name = imps_match.group(4).strip()
         sender_name = _clean_truncated_name(sender_name)
 
