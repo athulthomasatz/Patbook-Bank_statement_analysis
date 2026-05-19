@@ -28,7 +28,7 @@ jobs:
       - name: Ping Render health endpoint
         run: |
           echo "Pinging $RENDER_URL/api/health ..."
-          curl -sSf --max-time 30 \
+          curl -sSf --max-time 90 \
             "$RENDER_URL/api/health" \
             && echo "✅ Ping successful" \
             || (echo "❌ Ping failed"; exit 1)
