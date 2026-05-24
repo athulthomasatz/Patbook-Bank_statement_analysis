@@ -98,6 +98,7 @@ PARSERS = {
     "SBI": parse_sbi,
     "Kotak": parse_kotak,
     "PNB": parse_pnb,
+    "Kerala Gramin Bank": parse_kgb,
     "Axis": parse_axis,  # Add your bank here
 }
 ```
@@ -150,6 +151,7 @@ python -m pytest tests/ -v
 ### Existing Test Coverage
 - `test_canara.py` — 16 tests: date validation, row processing, amount extraction edge cases
 - `test_pnb.py` — 23 tests: date validation, UPI/IMPS/NEFT/RTGS payee extraction, row processing, cheque handling
+- `test_kgb.py` — 29 tests: date validation, payee extraction for UPI/UTR/MOB/Interest, text fallback parsing, row processing
 
 ### Adding New Parser Tests
 Follow the pattern in `test_pnb.py`:
