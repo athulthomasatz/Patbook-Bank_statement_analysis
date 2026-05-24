@@ -73,6 +73,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Line-break hyphen removal for cleaner payee extraction
   - IFN wallet categories: Food, Fuel, Shopping, Medical, Transfer
 - **Kotak parser** - Added to parser registry with Kotak-specific payee extraction (UPI/NAME/REFNO format, cashback, interest)
+- **Kerala Gramin Bank (KGB) parser** - New parser for KGB bank statements with support for:
+  - Table-based extraction (primary) with multi-line narration handling
+  - Text-based parsing fallback for borderless/scanned PDFs
+  - KGB-specific character-deduplication: fixes PDFs where every character is doubled (e.g. `1133--0055--22002266` → `13-05-2026`)
+  - UPI transactions with `Dr`/`Cr` direction detection (`UPI/.../Dr/NAME`, `UPI/.../Cr/NAME`)
+  - `Cr.for UTR` credit transactions with company name extraction
+  - `MOB` (Mobile Banking) transactions
+  - `Int.Pd` (Interest Paid) transactions
+  - Date format: `DD-MM-YYYY`
+  - Balance-based Debit/Credit fallback when narration is ambiguous
+  - 29 unit tests in `backend/tests/test_kgb.py`
 
 ### Changed
 - **Canara Bank parser reliability overhaul**:
