@@ -74,7 +74,6 @@ def _extract_kgb_payee_category(narration: str, txn_type: str) -> tuple[str, str
     # UPI with Dr or Cr
     upi_match = re.search(r'UPI/[^/]+/(DR|CR)/([^/]+)', narration, re.IGNORECASE)
     if upi_match:
-        direction = upi_match.group(1).upper()
         name = upi_match.group(2).strip()
         # Clean up name - remove trailing UPI handles like @ybl, @oksbi, @okici, @upi
         name = re.sub(r'[@\s]+(?:YBL|OKSBI|OKICI|UPI|OKHDFC|OKAXIS|OKICICI|SBIN|PNB|CNRB|YESB|KMB|IDB|UBIN|BKID|BARB|UTIB|RATN|IBKL|HDFC|ICIC|AXIS|IDFC|FED|KGB|KERALAGRAMIN)\b.*', '', name, flags=re.IGNORECASE)
@@ -309,7 +308,7 @@ def _parse_from_text(pdf) -> tuple[list, int]:
         if not text:
             log.info("  Page %d: no text", page_idx + 1)
             continue
-        lines = [_dedupe_doubled_chars(l) for l in text.split("\n")]
+        lines = [_dedupe_doubled_chars(line) for line in text.split("\n")]
         log.info("  Page %d: %d text lines", page_idx + 1, len(lines))
         all_lines.extend(lines)
 
