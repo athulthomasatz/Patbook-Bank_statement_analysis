@@ -14,7 +14,7 @@ Parse bank statement PDFs, extract transactions, and export them as CSV.
 
 ## Supported Banks
 
-HDFC, Canara, Union Bank, Federal Bank, SBI, Kotak
+HDFC, Canara, Union Bank, Federal Bank, SBI, Kotak, PNB, Kerala Gramin Bank
 
 > Adding a new bank? See [CLAUDE.md](CLAUDE.md) for parser implementation guide.
 

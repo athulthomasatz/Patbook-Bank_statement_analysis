@@ -238,6 +238,9 @@ Modular parser architecture with bank-specific implementations:
 - **Union Bank**: UPI/IMPS transactions with merchant mappings
 - **Federal Bank**: Table extraction, UPI/IFN/IMPS support, wallet categorization
 - **SBI**: Table/text extraction, UPI/CR|DR detection, DD/MM/YYYY dates
+- **Kotak**: UPI/NAME/REFNO format, cashback, interest detection
+- **PNB**: Table extraction, UPI/IMPS/NEFT/RTGS payee extraction, cheque handling
+- **Kerala Gramin Bank (KGB)**: Table + text fallback, character-deduplication for doubled PDF text, UPI Dr/Cr, Cr.for UTR, MOB, Int.Pd support, DD-MM-YYYY dates
 
 ### API Endpoints
 - `GET /api/banks` - Returns list of supported banks
@@ -252,6 +255,9 @@ The system dynamically fetches available banks from the backend, allowing new pa
 - Union Bank
 - Federal Bank
 - SBI
+- Kotak
+- PNB
+- Kerala Gramin Bank
 
 ## Responsive Design
 - **Mobile First**: Design starts at mobile breakpoint (640px)
