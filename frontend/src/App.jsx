@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import AnalyticsPage from "./pages/Analytics";
+import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import { trackPageView } from "./analytics";
@@ -47,11 +49,14 @@ export default function App() {
         <Navbar theme={theme} toggleTheme={toggleTheme} />
 
         <main className="flex-1 mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-          <Routes>
-            <Route path="/" element={<Home transactions={transactions} setTransactions={setTransactions} />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/analytics" element={<AnalyticsPage transactions={transactions} />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home transactions={transactions} setTransactions={setTransactions} />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/analytics" element={<AnalyticsPage transactions={transactions} />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
         </main>
         
         <Footer />

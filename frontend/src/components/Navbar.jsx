@@ -29,18 +29,18 @@ export default function Navbar({ theme, toggleTheme }) {
         }`}
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           {/* Logo */}
           <Link
             to="/"
-            className="hover:opacity-85 transition-opacity"
+            className="hover:opacity-85 transition-opacity justify-self-start"
             aria-label="Patbook — Bank Statement Analyzer"
           >
             <Logo1 height={40} />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1 justify-self-center">
             {navLinks.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -60,7 +60,7 @@ export default function Navbar({ theme, toggleTheme }) {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 justify-self-end">
             <button
               onClick={toggleTheme}
               className="relative p-2.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--text-muted)]/10 transition-all duration-300 group overflow-hidden active:scale-90"

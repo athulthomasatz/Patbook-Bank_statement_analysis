@@ -3,6 +3,7 @@ import { useState } from "react";
 export default function Table({ transactions, allTransactions, updateTransaction }) {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingField, setEditingField] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   if (!transactions.length) {
     return <p className="text-[var(--text-muted)] text-sm p-4 text-center">No transactions to display.</p>;
@@ -27,24 +28,93 @@ export default function Table({ transactions, allTransactions, updateTransaction
     return allTransactions.indexOf(transactions[filteredIndex]);
   };
 
+  // Sorting logic
+  const sortedTransactions = [...transactions];
+  if (sortConfig.key) {
+    sortedTransactions.sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+
+      if (sortConfig.key === "Date") {
+        aVal = new Date(aVal + "T00:00:00").getTime();
+        bVal = new Date(bVal + "T00:00:00").getTime();
+      } else if (sortConfig.key === "Amount" || sortConfig.key === "Balance") {
+        aVal = Number(aVal) || 0;
+        bVal = Number(bVal) || 0;
+      } else {
+        aVal = String(aVal || "").toLowerCase();
+        bVal = String(bVal || "").toLowerCase();
+      }
+
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function handleSort(key) {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { key, direction: "asc" };
+    });
+  }
+
+  const SortIcon = ({ column }) => {
+    if (sortConfig.key !== column) {
+      return (
+        <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortConfig.direction === "asc" ? (
+      <svg className="w-3.5 h-3.5 text-[var(--primary-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-3.5 h-3.5 text-[var(--primary-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
+
+  const headers = [
+    { key: "Date", label: "Date", align: "left" },
+    { key: "Payee", label: "Payee", align: "left" },
+    { key: "Category", label: "Category", align: "left" },
+    { key: "Type", label: "Type", align: "left" },
+    { key: "Amount", label: "Amount", align: "right" },
+    { key: "Balance", label: "Balance", align: "right" },
+    { key: "Notes", label: "Notes", align: "left", noSort: true },
+  ];
+
   return (
     <div>
       <div className="overflow-x-auto max-h-[600px] overflow-y-auto w-full">
         <table className="w-full text-sm text-left">
           <thead className="sticky top-0 z-10 bg-[var(--bg-color)]/95 backdrop-blur shadow-sm">
             <tr className="text-xs uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-color)]">
-              <th className="px-6 py-4 font-semibold">Date</th>
-              <th className="px-6 py-4 font-semibold">Payee</th>
-              <th className="px-6 py-4 font-semibold">Category</th>
-              <th className="px-6 py-4 font-semibold">Type</th>
-              <th className="px-6 py-4 font-semibold text-right">Amount</th>
-              <th className="px-6 py-4 font-semibold text-right">Balance</th>
-              <th className="px-6 py-4 font-semibold">Notes</th>
+              {headers.map((h) => (
+                <th
+                  key={h.key}
+                  onClick={() => !h.noSort && handleSort(h.key)}
+                  className={`px-6 py-4 font-semibold group select-none ${
+                    h.align === "right" ? "text-right" : "text-left"
+                  } ${!h.noSort ? "cursor-pointer hover:text-[var(--text-main)]" : ""}`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {h.label}
+                    {!h.noSort && <SortIcon column={h.key} />}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-color)] bg-[var(--card-bg)]">
-            {transactions.map((t, i) => {
-              const originalIndex = getOriginalIndex(i);
+            {sortedTransactions.map((t, i) => {
+              const originalIndex = getOriginalIndex(transactions.indexOf(t));
               return (
                 <tr key={i} className="table-row-hover group transition-colors hover:bg-[var(--bg-color)]">
                   <td className="whitespace-nowrap px-6 py-3.5 text-[var(--text-muted)]">{formatDate(t.Date)}</td>
@@ -128,6 +198,14 @@ export default function Table({ transactions, allTransactions, updateTransaction
 
       <div className="flex justify-between items-center mt-4 px-2">
         <p className="text-xs font-medium text-[var(--text-muted)]">{transactions.length} of {allTransactions.length} transactions</p>
+        {sortConfig.key && (
+          <button
+            onClick={() => setSortConfig({ key: null, direction: "asc" })}
+            className="text-xs font-medium text-[var(--primary-accent)] hover:underline"
+          >
+            Clear sort
+          </button>
+        )}
       </div>
     </div>
   );
