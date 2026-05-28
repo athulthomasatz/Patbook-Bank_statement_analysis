@@ -1,6 +1,6 @@
 import Dropdown from "./Dropdown";
 
-export default function Filters({ typeFilter, setTypeFilter, category, setCategory, categories, search, setSearch, onExport }) {
+export default function Filters({ typeFilter, setTypeFilter, category, setCategory, categories, search, setSearch, onExport, dateFrom, setDateFrom, dateTo, setDateTo }) {
   return (
     <div className="flex flex-col md:flex-row flex-wrap items-center gap-4">
       {/* Type buttons */}
@@ -30,6 +30,40 @@ export default function Filters({ typeFilter, setTypeFilter, category, setCatego
           }))}
           onSelect={setCategory}
         />
+      </div>
+
+      {/* Date Range */}
+      <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="relative flex-1 md:flex-none">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-full md:w-auto rounded-full border border-[var(--border-color)] bg-[var(--bg-color)] px-4 py-2.5 text-sm text-[var(--text-main)] outline-none transition-all focus:border-[var(--primary-accent)] focus:ring-2 focus:ring-[var(--primary-accent)]/20"
+            placeholder="From"
+          />
+        </div>
+        <span className="text-[var(--text-muted)] text-sm">→</span>
+        <div className="relative flex-1 md:flex-none">
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-full md:w-auto rounded-full border border-[var(--border-color)] bg-[var(--bg-color)] px-4 py-2.5 text-sm text-[var(--text-main)] outline-none transition-all focus:border-[var(--primary-accent)] focus:ring-2 focus:ring-[var(--primary-accent)]/20"
+            placeholder="To"
+          />
+        </div>
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => { setDateFrom(""); setDateTo(""); }}
+            className="p-1.5 rounded-full text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-color)] transition-colors"
+            title="Clear date filter"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Search */}
